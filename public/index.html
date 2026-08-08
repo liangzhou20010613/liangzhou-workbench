@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>梁州商务工作台</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #f5f6f8; --card-bg: #ffffff; --text: #1a1a2e; --text-secondary: #6b7280;
+  --border: #e5e7eb; --primary: #4f46e5; --primary-light: #eef2ff; --primary-dark: #4338ca;
+  --success: #10b981; --success-light: #d1fae5; --warning: #f59e0b; --warning-light: #fef3c7;
+  --danger: #ef4444; --danger-light: #fee2e2; --info: #3b82f6; --info-light: #dbeafe;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08); --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --radius: 12px; --radius-sm: 8px;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; }
+
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 220px; background: var(--card-bg); border-right: 1px solid var(--border); padding: 24px 0; z-index: 100; display: flex; flex-direction: column; }
+.sidebar-logo { padding: 0 24px 24px; font-size: 18px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+.sidebar-logo .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+.nav-item { padding: 10px 24px; cursor: pointer; color: var(--text-secondary); font-size: 14px; display: flex; align-items: center; gap: 10px; transition: all 0.2s; border-left: 3px solid transparent; }
+.nav-item:hover { background: var(--primary-light); color: var(--primary); }
+.nav-item.active { background: var(--primary-light); color: var(--primary); border-left-color: var(--primary); font-weight: 600; }
+.nav-item .icon { width: 20px; text-align: center; font-size: 16px; }
+.sidebar-footer { margin-top: auto; padding: 16px 24px; font-size: 12px; color: var(--text-secondary); border-top: 1px solid var(--border); }
+
+.main { margin-left: 220px; padding: 24px 32px; min-height: 100vh; }
+.page-header { margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; }
+.page-header h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+.page-header p { color: var(--text-secondary); font-size: 13px; }
+
+.toolbar { display: flex; gap: 8px; align-items: center; }
+.btn { padding: 6px 16px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-outline { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); }
+.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+.btn-danger { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger); }
+.btn-danger:hover { background: var(--danger); color: white; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.kpi-card { background: var(--card-bg); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); position: relative; overflow: hidden; }
+.kpi-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.kpi-card.blue::before { background: var(--info); } .kpi-card.green::before { background: var(--success); }
+.kpi-card.orange::before { background: var(--warning); } .kpi-card.purple::before { background: var(--primary); }
+.kpi-card.red::before { background: var(--danger); }
+.kpi-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+.kpi-value { font-size: 28px; font-weight: 700; }
+.kpi-sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+.chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.chart-card { background: var(--card-bg); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.chart-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.chart-card.full { grid-column: 1 / -1; }
+
+.table-card { background: var(--card-bg); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 24px; }
+.table-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 10px 12px; background: var(--bg); font-weight: 600; color: var(--text-secondary); border-bottom: 2px solid var(--border); white-space: nowrap; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:hover td { background: #fafbff; }
+
+.badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.badge-success { background: var(--success-light); color: #065f46; } .badge-warning { background: var(--warning-light); color: #92400e; }
+.badge-danger { background: var(--danger-light); color: #991b1b; } .badge-info { background: var(--info-light); color: #1e40af; }
+.badge-gray { background: #f3f4f6; color: #4b5563; } .badge-purple { background: var(--primary-light); color: var(--primary-dark); }
+
+/* Editable dropdown cell */
+.edit-cell { cursor: pointer; position: relative; min-height: 28px; display: flex; align-items: center; }
+.edit-cell:hover .edit-badge { opacity: 0.8; box-shadow: 0 0 0 2px var(--primary); }
+.edit-badge { transition: all 0.2s; display: inline-flex; align-items: center; gap: 4px; }
+.edit-badge::after { content: "\25BE"; font-size: 10px; opacity: 0.5; margin-left: 2px; }
+.edit-select { font-size: 12px; padding: 4px 8px; border: 1px solid var(--primary); border-radius: 6px; background: var(--card-bg); color: var(--text); outline: none; cursor: pointer; max-width: 140px; }
+.edit-input { font-size: 13px; padding: 4px 8px; border: 1px solid var(--primary); border-radius: 6px; background: var(--card-bg); color: var(--text); outline: none; width: 100%; }
+
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.calendar-header { text-align: center; font-weight: 600; padding: 8px; color: var(--text-secondary); font-size: 13px; }
+.calendar-cell { min-height: 90px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px; background: var(--card-bg); cursor: pointer; transition: all 0.2s; position: relative; }
+.calendar-cell:hover { box-shadow: var(--shadow-md); border-color: var(--primary); }
+.calendar-cell.empty { background: transparent; border: none; cursor: default; }
+.calendar-cell.today { border-color: var(--primary); border-width: 2px; }
+.calendar-cell .day-num { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 2px; }
+.calendar-cell.has-update .day-num { color: var(--primary); }
+.calendar-event { font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.event-commercial { background: #fef3c7; color: #92400e; } .event-regular { background: #dbeafe; color: #1e40af; }
+.calendar-cell .cal-editor { font-size: 10px; color: var(--primary); margin-top: 2px; font-weight: 500; }
+
+.tab-content { display: none; } .tab-content.active { display: block; }
+.filter-bar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+.filter-bar select, .filter-bar input { padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; background: var(--card-bg); color: var(--text); }
+.filter-bar select:focus, .filter-bar input:focus { outline: none; border-color: var(--primary); }
+.filter-label { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 200; display: none; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--card-bg); border-radius: var(--radius); padding: 28px; max-width: 640px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+.modal h2 { font-size: 20px; margin-bottom: 16px; }
+.modal-close { float: right; cursor: pointer; font-size: 20px; color: var(--text-secondary); }
+.modal-row { display: flex; margin-bottom: 12px; gap: 12px; }
+.modal-label { width: 90px; color: var(--text-secondary); font-size: 13px; flex-shrink: 0; }
+.modal-value { flex: 1; font-size: 13px; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+
+.save-indicator { position: fixed; bottom: 20px; right: 20px; background: var(--success); color: white; padding: 8px 16px; border-radius: 8px; font-size: 13px; box-shadow: var(--shadow-md); z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.save-indicator.show { opacity: 1; }
+
+@media (max-width: 1024px) { .chart-row { grid-template-columns: 1fr; } .sidebar { width: 60px; } .sidebar-logo span, .nav-item span:not(.icon), .sidebar-footer { display: none; } .main { margin-left: 60px; } }
+
+/* Login Screen */
+.login-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  z-index: 9999; display: flex; align-items: center; justify-content: center;
+}
+.login-overlay.hidden { display: none; }
+.login-card {
+  background: white; border-radius: 16px; padding: 40px;
+  width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: slideUp 0.4s ease;
+}
+@keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.login-logo {
+  text-align: center; margin-bottom: 28px;
+}
+.login-logo .icon-circle {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 28px; margin-bottom: 12px;
+}
+.login-logo h2 { font-size: 20px; color: var(--text); font-weight: 700; }
+.login-logo p { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+.login-field { margin-bottom: 16px; }
+.login-field label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500; }
+.login-field input {
+  width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+  border-radius: 8px; font-size: 14px; color: var(--text);
+  transition: border-color 0.2s; background: #fafafa;
+}
+.login-field input:focus { outline: none; border-color: var(--primary); background: white; box-shadow: 0 0 0 3px var(--primary-light); }
+.login-error { color: var(--danger); font-size: 13px; margin-bottom: 12px; display: none; }
+.login-error.show { display: block; }
+.login-btn {
+  width: 100%; padding: 12px; border: none; border-radius: 8px;
+  background: linear-gradient(135deg, #667eea, #764ba2); color: white;
+  font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.login-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+.login-btn:active { transform: translateY(0); }
+.login-hint { text-align: center; margin-top: 16px; font-size: 12px; color: var(--text-secondary); }
+
+/* User badge in sidebar */
+.user-badge {
+  margin-top: auto; padding: 12px 24px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.user-info { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.user-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600;
+}
+.user-name { font-weight: 600; color: var(--text); }
+.logout-btn {
+  background: none; border: none; cursor: pointer; font-size: 16px;
+  color: var(--text-secondary); transition: color 0.2s; padding: 4px;
+}
+.logout-btn:hover { color: var(--danger); }
+.settings-btn {
+  background: none; border: none; cursor: pointer; font-size: 14px;
+  color: var(--text-secondary); transition: color 0.2s; padding: 4px;
+}
+.settings-btn:hover { color: var(--primary); }
+
+/* User management modal */
+.user-mgmt-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.user-mgmt-row .um-name { flex: 1; font-weight: 500; font-size: 14px; }
+.user-mgmt-row .um-role { font-size: 12px; color: var(--text-secondary); }
+.um-delete { background: none; border: 1px solid var(--danger); color: var(--danger); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+.um-delete:hover { background: var(--danger); color: white; }
+.um-add-form { display: flex; gap: 8px; margin-top: 16px; }
+.um-add-form input { flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+.um-add-form select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+.um-add-form button { padding: 6px 16px; border: none; border-radius: 6px; background: var(--primary); color: white; font-size: 13px; cursor: pointer; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="icon-circle">&#128737;</div>
+      <h2>梁州商务工作台</h2>
+      <p>请登录后使用</p>
+    </div>
+    <div class="login-error" id="login-error">用户名或密码错误，请重试</div>
+    <div class="login-field">
+      <label>用户名</label>
+      <input type="text" id="login-username" placeholder="请输入用户名" autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
+    </div>
+    <div class="login-field">
+      <label>密码</label>
+      <input type="password" id="login-password" placeholder="请输入密码" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">登 录</button>
+    <div class="login-hint">仅限内部人员使用，未经授权禁止访问</div>
+  </div>
+</div>
+
+<div class="sidebar">
+  <div class="sidebar-logo"><span class="dot"></span><span>梁州商务</span></div>
+  <div class="nav-item active" onclick="switchTab('dashboard', this)"><span class="icon">&#128202;</span><span>数据看板</span></div>
+  <div class="nav-item" onclick="switchTab('schedule', this)"><span class="icon">&#128197;</span><span>档期管理</span></div>
+  <div class="nav-item" onclick="switchTab('orders', this)"><span class="icon">&#128203;</span><span>合作订单</span></div>
+  <div class="nav-item" onclick="switchTab('agreements', this)"><span class="icon">&#128221;</span><span>协议进度</span></div>
+  <div class="nav-item" onclick="switchTab('contacts', this)"><span class="icon">&#128222;</span><span>建联管理</span></div>
+  <div class="nav-item" onclick="switchTab('ratecard', this)"><span class="icon">&#128176;</span><span>刊例价表</span></div>
+  <div class="nav-item" onclick="switchTab('analytics', this)"><span class="icon">&#128202;</span><span>数据分析</span></div>
+  <div class="sidebar-footer" id="sidebar-footer">数据更新于 2026-08-08<br><span id="edit-count" style="color:var(--success);"></span></div>
+  <div class="user-badge" id="user-badge">
+    <div class="user-info">
+      <div class="user-avatar" id="user-avatar">A</div>
+      <span class="user-name" id="user-name">admin</span>
+    </div>
+    <div style="display:flex;gap:4px;">
+      <button class="settings-btn" onclick="openUserMgmt()" title="用户管理">&#9881;</button>
+      <button class="logout-btn" onclick="doLogout()" title="退出登录">&#8634;</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- DASHBOARD -->
+<div class="tab-content active" id="tab-dashboard">
+  <div class="page-header">
+    <div><h1>数据看板</h1><p>梁州商务工作进度总览</p></div>
+    <div class="toolbar">
+      <button class="btn btn-outline" onclick="exportData()">&#128190; 导出数据</button>
+      <button class="btn btn-danger" onclick="resetData()">&#128260; 重置</button>
+    </div>
+  </div>
+  <div class="kpi-grid" id="kpi-grid"></div>
+  <div class="chart-row">
+    <div class="chart-card"><h3>平台合作分布</h3><div id="platform-chart" style="height: 240px;"></div></div>
+    <div class="chart-card"><h3>制作进度分布</h3><div id="progress-chart" style="height: 240px;"></div></div>
+  </div>
+  <div class="chart-row">
+    <div class="chart-card full"><h3>近期合作项目进度</h3><div id="recent-orders"></div></div>
+  </div>
+  <div class="chart-row">
+    <div class="chart-card"><h3>剪辑师工作量</h3><div id="editor-chart" style="height: 240px;"></div></div>
+    <div class="chart-card"><h3>待办事项提醒</h3><div id="todo-list"></div></div>
+  </div>
+</div>
+
+<!-- SCHEDULE -->
+<div class="tab-content" id="tab-schedule">
+  <div class="page-header">
+    <div><h1>档期管理</h1><p>内容发布排期日历 - 点击日期可编辑排期</p></div>
+  </div>
+  <div class="filter-bar">
+    <span class="filter-label">月份：</span>
+    <select id="schedule-month" onchange="renderCalendar()">
+      <option value="2026-07">2026年7月</option><option value="2026-08" selected>2026年8月</option><option value="2026-09">2026年9月</option>
+    </select>
+    <span class="filter-label" style="margin-left:16px;">剪辑师筛选：</span>
+    <select id="schedule-editor-filter" onchange="renderCalendar()">
+      <option value="">全部</option><option value="鸭老师">鸭老师</option><option value="伊老师">伊老师</option><option value="sasa">sasa</option><option value="青迟">青迟</option><option value="不需要">不需要</option>
+    </select>
+  </div>
+  <div class="table-card"><div id="calendar-container"></div></div>
+  <div class="table-card"><h3>本月发布明细</h3><div id="schedule-detail"></div></div>
+</div>
+
+<!-- ORDERS -->
+<div class="tab-content" id="tab-orders">
+  <div class="page-header">
+    <div><h1>合作订单</h1><p>所有品牌合作订单 - 点击状态可编辑</p></div>
+    <button class="btn btn-primary" onclick="addOrder()">＋ 新增订单</button>
+  </div>
+  <div class="filter-bar">
+    <span class="filter-label">平台：</span>
+    <select id="order-platform-filter" onchange="renderOrders()"><option value="">全部</option><option value="抖音">抖音</option><option value="小红书">小红书</option><option value="B站">B站</option><option value="视频号">视频号</option><option value="豆瓣">豆瓣</option></select>
+    <span class="filter-label">制作进度：</span>
+    <select id="order-progress-filter" onchange="renderOrders()"><option value="">全部</option><option value="待开始">待开始</option><option value="写大纲">写大纲</option><option value="写脚本">写脚本</option><option value="剪视频中">剪视频中</option><option value="等反馈修改">等反馈修改</option><option value="已发布">已发布</option></select>
+    <span class="filter-label">剪辑师：</span>
+    <select id="order-editor-filter" onchange="renderOrders()"><option value="">全部</option><option value="鸭老师">鸭老师</option><option value="伊老师">伊老师</option><option value="sasa">sasa</option><option value="青迟">青迟</option><option value="不需要">不需要</option><option value="未分配">未分配</option></select>
+    <span class="filter-label">搜索：</span>
+    <input type="text" id="order-search" placeholder="搜索品牌名称..." oninput="renderOrders()">
+  </div>
+  <div class="table-card"><table id="orders-table"></table></div>
+</div>
+
+<!-- AGREEMENTS -->
+<div class="tab-content" id="tab-agreements">
+  <div class="page-header"><div><h1>协议进度</h1><p>合作协议签署与打款进度 - 点击状态可编辑</p></div></div>
+  <div class="kpi-grid" id="agreement-kpi"></div>
+  <div class="table-card"><h3>协议明细</h3><table id="agreements-table"></table></div>
+</div>
+
+<!-- CONTACTS -->
+<div class="tab-content" id="tab-contacts">
+  <div class="page-header"><div><h1>建联管理</h1><p>商务拓展联系人及沟通状态 - 点击状态可编辑</p></div></div>
+  <div class="filter-bar">
+    <span class="filter-label">状态：</span>
+    <select id="contact-status-filter" onchange="renderContacts()"><option value="">全部</option><option value="确认合作">确认合作</option><option value="提报合作中">提报合作中</option><option value="开场白">开场白</option><option value="等验证通过">等验证通过</option><option value="无法合作">无法合作</option></select>
+    <span class="filter-label">来源：</span>
+    <select id="contact-source-filter" onchange="renderContacts()"><option value="">全部</option><option value="小红书">小红书</option><option value="B站">B站</option><option value="抖音">抖音</option><option value="微博">微博</option><option value="视频号">视频号</option></select>
+    <span class="filter-label">搜索：</span>
+    <input type="text" id="contact-search" placeholder="搜索项目或联系方式..." oninput="renderContacts()">
+  </div>
+  <div class="table-card"><table id="contacts-table"></table></div>
+</div>
+
+<!-- RATE CARD -->
+<div class="tab-content" id="tab-ratecard">
+  <div class="page-header"><div><h1>刊例价表</h1><p>各平台月度刊例价及组合折扣</p></div></div>
+  <div class="table-card"><h3>单平台刊例价（元）</h3><table class="rate-table" id="rate-table"></table></div>
+  <div class="table-card"><h3>多平台组合折扣</h3><table class="rate-table" id="combo-table"></table></div>
+</div>
+
+<!-- ANALYTICS -->
+<div class="tab-content" id="tab-analytics">
+  <div class="page-header">
+    <div><h1>数据分析</h1><p>刊例价、返点价与平台横向对比</p></div>
+    <div class="toolbar">
+      <span class="filter-label">月度对比口径：</span>
+      <select id="analytics-metric" onchange="renderAnalytics()">
+        <option value="all">全部指标</option>
+        <option value="price">仅刊例价</option>
+        <option value="rebate">仅返点金额</option>
+        <option value="net">仅实际收入</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="kpi-grid" id="analytics-kpi"></div>
+
+  <div class="chart-row">
+    <div class="chart-card full">
+      <h3>月度周期对比（刊例价 / 返点金额 / 实际收入）</h3>
+      <div id="monthly-compare-chart"></div>
+      <div id="monthly-growth" style="margin-top:16px;"></div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-card">
+      <h3>各平台横向对比 - 刊例价合计</h3>
+      <div id="platform-compare-chart"></div>
+    </div>
+    <div class="chart-card">
+      <h3>各平台返点率对比</h3>
+      <div id="platform-rebate-chart"></div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <h3>平台 × 月份 交叉对比（刊例价 / 返点金额）</h3>
+    <div id="cross-matrix"></div>
+  </div>
+
+  <div class="table-card">
+    <h3>各平台明细对比</h3>
+    <div id="platform-detail-table"></div>
+  </div>
+</div>
+
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)"><div class="modal" id="modal-content"></div></div>
+<div class="save-indicator" id="save-indicator">&#9989; 已保存</div>
+
+<script>
+const EDITABLE_FIELDS = {
+  orders: ["剪辑师", "制作进度", "下单进度", "返点进度"],
+  agreements: ["协议进度", "其他进度"],
+  contacts: ["沟通状态"],
+  schedule: ["剪辑师", "类型", "备注"]
+};
+const EDITORS = ["", "鸭老师", "伊老师", "sasa", "青迟", "不需要"];
+const PROGRESS_OPTIONS = ["待开始", "写大纲", "写脚本", "剪视频中", "等反馈修改", "已发布"];
+const ORDER_PROGRESS = ["", "已下单", "待下单", "水下已签协议", "水下待签协议"];
+const REBATE_PROGRESS = ["", "已完成", "等对方开票", "待我方打款"];
+const AGREEMENT_PROGRESS = ["", "双方已签署", "待对方签署"];
+const CONTACT_STATUS = ["确认合作", "提报合作中", "开场白", "等验证通过", "无法合作"];
+const SCHEDULE_TYPE = ["商单作品", "常规作品"];
+
+// Map original 档期进度待办 to 制作进度
+function mapProgress(todo) {
+  if (!todo) return "待开始";
+  if (todo.includes("发布万岁")) return "已发布";
+  if (todo.includes("等反馈") || todo.includes("改")) return "等反馈修改";
+  if (todo.includes("剪视频")) return "剪视频中";
+  if (todo.includes("写脚本")) return "写脚本";
+  if (todo.includes("写大纲")) return "写大纲";
+  return "待开始";
+}
+
+// === API 数据层 (实时共享版) ===
+let APP_DATA = null;
+let CURRENT_USER = null;
+let SSE_CONNECTED = false;
+let PENDING_RENDER = false;
+
+const API = {
+  async req(path, opts = {}) {
+    const res = await fetch(path, {
+      method: opts.method || "GET",
+      headers: Object.assign({ "Content-Type": "application/json" }, opts.headers || {}),
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+      credentials: "same-origin"
+    });
+    if (!res.ok) {
+      if (res.status === 401) { showLogin(); throw new Error("未登录"); }
+      let msg = "请求失败(" + res.status + ")";
+      try { const j = await res.json(); if (j && j.error) msg = j.error; } catch (e) {}
+      throw new Error(msg);
+    }
+    const ct = res.headers.get("content-type") || "";
+    return ct.includes("application/json") ? res.json() : res.text();
+  }
+};
+
+async function loadData() {
+  APP_DATA = await API.req("/api/data");
+  if (APP_DATA["合作表"] && APP_DATA["合作表"].data) {
+    APP_DATA["合作表"].data.forEach(o => { if (!o["制作进度"]) o["制作进度"] = mapProgress(o["档期进度待办"]); });
+  }
+}
+
+function pushUpdate(sheet, index, field, value) {
+  if (!APP_DATA || !APP_DATA[sheet] || !APP_DATA[sheet].data[index]) return;
+  APP_DATA[sheet].data[index][field] = value;
+  renderAll();
+  showSaved();
+  API.req("/api/update", { method: "POST", body: { sheet, index, field, value } }).catch(err => showError(err.message));
+}
+
+function pushBatch(sheet, index, changes) {
+  if (!APP_DATA || !APP_DATA[sheet] || !APP_DATA[sheet].data[index]) return;
+  changes.forEach(c => { APP_DATA[sheet].data[index][c.field] = c.value; });
+  renderAll();
+  showSaved();
+  API.req("/api/update", { method: "POST", body: { sheet, index, changes } }).catch(err => showError(err.message));
+}
+
+function showSaved() {
+  const el = document.getElementById("save-indicator");
+  if (!el) return;
+  el.textContent = "✅ 已保存并同步";
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 1500);
+}
+function showError(msg) {
+  const el = document.getElementById("save-indicator");
+  if (!el) return;
+  el.textContent = "⚠️ " + msg;
+  el.style.background = "var(--danger)";
+  el.classList.add("show");
+  setTimeout(() => { el.classList.remove("show"); el.style.background = "var(--success)"; }, 3000);
+}
+
+function connectSSE() {
+  const es = new EventSource("/api/stream");
+  es.onopen = () => { SSE_CONNECTED = true; updateSyncStatus(); };
+  es.onmessage = (ev) => {
+    try {
+      const msg = JSON.parse(ev.data);
+      if (msg.type === "data" && msg.data) {
+        APP_DATA = msg.data;
+        if (document.querySelector(".edit-select")) { PENDING_RENDER = true; return; }
+        renderAll();
+      }
+    } catch (e) {}
+  };
+  es.onerror = () => { SSE_CONNECTED = false; updateSyncStatus(); setTimeout(connectSSE, 3000); };
+}
+function updateSyncStatus() {
+  const el = document.getElementById("edit-count");
+  if (!el) return;
+  el.textContent = SSE_CONNECTED ? "● 实时同步中" : "○ 连接中...";
+  el.style.color = SSE_CONNECTED ? "var(--success)" : "var(--warning)";
+}
+
+async function resetData() {
+  if (!confirm("确定要重置所有数据吗？这将恢复到原始 Excel 数据（仅管理员可操作）。")) return;
+  try {
+    await API.req("/api/reset", { method: "POST" });
+    APP_DATA = await API.req("/api/data");
+    renderAll();
+  } catch (e) { alert("重置失败：" + e.message); }
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(APP_DATA, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "梁州商务工作进度_实时版.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// === Utilities ===
+function esc(s) { if (s === null || s === undefined) return ""; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function fmtMoney(v) { if (v === null || v === undefined || v === "-" || v === "") return "-"; if (typeof v === "number") return "\u00a5" + v.toLocaleString(); return v; }
+function fmtPct(v) { if (v === null || v === undefined || v === "-" || v === "") return "-"; if (typeof v === "number") return (v * 100).toFixed(0) + "%"; return v; }
+
+function platformBadge(p) {
+  const colors = {"抖音":"badge-danger","小红书":"badge-warning","B站":"badge-info","视频号":"badge-success","微博":"badge-purple","豆瓣":"badge-gray","小宇宙":"badge-gray"};
+  return '<span class="badge ' + (colors[p]||"badge-gray") + '">' + esc(p) + '</span>';
+}
+function progressBadgeClass(p) {
+  const map = {"待开始":"badge-gray","写大纲":"badge-gray","写脚本":"badge-info","剪视频中":"badge-warning","等反馈修改":"badge-warning","已发布":"badge-success","已下单":"badge-success","待下单":"badge-warning","水下已签协议":"badge-info","水下待签协议":"badge-warning"};
+  return map[p] || "badge-gray";
+}
+
+// === Editable cell renderer ===
+function editSelect(field, currentValue, options, sheetName, rowIndex, callback) {
+  const id = "edit-" + sheetName + "-" + rowIndex + "-" + field;
+  const display = currentValue || (field === "剪辑师" ? "未分配" : "-");
+  const badgeClass = progressBadgeClass(currentValue);
+  return `<div class="edit-cell" onclick="startEdit('${id}', '${sheetName}', ${rowIndex}, '${field}', ${JSON.stringify(options).replace(/"/g,'&quot;')})">
+    <span class="badge ${badgeClass} edit-badge" id="${id}-display">${esc(display)}</span>
+  </div>`;
+}
+
+function startEdit(id, sheetName, rowIndex, field, options) {
+  const display = document.getElementById(id + "-display");
+  if (!display) return;
+  const currentVal = display.textContent === "未分配" ? "" : display.textContent === "-" ? "" : display.textContent;
+  const select = document.createElement("select");
+  select.className = "edit-select";
+  select.id = id + "-select";
+  options.forEach(opt => {
+    const o = document.createElement("option");
+    o.value = opt; o.textContent = opt || (field === "剪辑师" ? "未分配" : "-");
+    if (opt === currentVal || (!opt && !currentVal)) o.selected = true;
+    select.appendChild(o);
+  });
+  display.replaceWith(select);
+  select.focus();
+  let done = false;
+  const commit = () => {
+    if (done) return; done = true;
+    const newVal = select.value;
+    const actualKey = sheetName === "orders" ? "合作表" : sheetName === "agreements" ? "合作协议进度" : sheetName === "contacts" ? "建联表" : sheetName === "schedule" ? "档期表" : sheetName;
+    pushUpdate(actualKey, rowIndex, field, newVal || null);
+  };
+  select.addEventListener("change", commit);
+  select.addEventListener("blur", commit);
+  select.addEventListener("keydown", e => { if (e.key === "Escape") { done = true; renderAll(); } });
+}
+
+// === Tab switching ===
+function switchTab(tab, el) {
+  document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(t => t.classList.remove("active"));
+  document.getElementById("tab-" + tab).classList.add("active");
+  el.classList.add("active");
+}
+
+// === Dashboard ===
+function renderDashboard() {
+  const orders = APP_DATA["合作表"].data;
+  const contacts = APP_DATA["建联表"].data;
+  const agreements = APP_DATA["合作协议进度"].data;
+  const schedule = APP_DATA["档期表"].data.filter(s => s["是否有更新"] === "有更新");
+
+  const totalRevenue = orders.reduce((s,o) => s + (typeof o["刊例价格"]==="number"?o["刊例价格"]:0), 0);
+  const published = orders.filter(o => o["制作进度"] === "已发布").length;
+  const inProgress = orders.filter(o => o["制作进度"] && o["制作进度"] !== "已发布" && o["制作进度"] !== "待开始").length;
+  const notStarted = orders.filter(o => !o["制作进度"] || o["制作进度"] === "待开始").length;
+  const pendingOrders = orders.filter(o => o["下单进度"] === "待下单").length;
+  const totalContacts = contacts.length;
+  const confirmedContacts = contacts.filter(c => c["沟通状态"] === "确认合作").length;
+  const pendingAgreements = agreements.filter(a => a["协议进度"] === "待对方签署").length;
+
+  document.getElementById("kpi-grid").innerHTML = `
+    <div class="kpi-card purple"><div class="kpi-label">合作订单总数</div><div class="kpi-value">${orders.length}</div><div class="kpi-sub">已发布 ${published} / 制作中 ${inProgress} / 待开始 ${notStarted}</div></div>
+    <div class="kpi-card blue"><div class="kpi-label">刊例总价</div><div class="kpi-value">\u00a5${totalRevenue.toLocaleString()}</div><div class="kpi-sub">含 ${orders.filter(o=>o["合作平台"]).length} 个平台合作</div></div>
+    <div class="kpi-card orange"><div class="kpi-label">待下单订单</div><div class="kpi-value">${pendingOrders}</div><div class="kpi-sub">需跟进下单进度</div></div>
+    <div class="kpi-card green"><div class="kpi-label">建联总数</div><div class="kpi-value">${totalContacts}</div><div class="kpi-sub">确认合作 ${confirmedContacts} 个</div></div>
+    <div class="kpi-card red"><div class="kpi-label">待签协议</div><div class="kpi-value">${pendingAgreements}</div><div class="kpi-sub">需跟进签署进度</div></div>
+    <div class="kpi-card blue"><div class="kpi-label">本月排期</div><div class="kpi-value">${schedule.filter(s=>s["日期"]&&s["日期"].startsWith("2026-08")).length}</div><div class="kpi-sub">8月已排内容</div></div>
+  `;
+
+  // Platform chart
+  const pc = {}; orders.forEach(o => { if(o["合作平台"]) pc[o["合作平台"]] = (pc[o["合作平台"]]||0)+1; });
+  const pcolors = {"抖音":"#ef4444","小红书":"#f59e0b","B站":"#3b82f6","视频号":"#10b981","微博":"#8b5cf6","豆瓣":"#6b7280"};
+  let pb = ""; const pmax = Math.max(...Object.values(pc),1);
+  Object.entries(pc).sort((a,b)=>b[1]-a[1]).forEach(([p,c]) => {
+    pb += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><div style="width:60px;font-size:13px;font-weight:500;">${esc(p)}</div><div style="flex:1;background:var(--bg);border-radius:4px;height:24px;overflow:hidden;"><div style="width:${c/pmax*100}%;height:100%;background:${pcolors[p]||"#999"};border-radius:4px;display:flex;align-items:center;padding-left:8px;color:white;font-size:12px;font-weight:600;">${c}</div></div></div>`;
+  });
+  document.getElementById("platform-chart").innerHTML = pb;
+
+  // Progress chart
+  const pgc = {}; orders.forEach(o => { const p = o["制作进度"]||"待开始"; pgc[p] = (pgc[p]||0)+1; });
+  const pgColors = {"待开始":"#9ca3af","写大纲":"#6366f1","写脚本":"#3b82f6","剪视频中":"#f59e0b","等反馈修改":"#f97316","已发布":"#10b981"};
+  const pgOrder = ["待开始","写大纲","写脚本","剪视频中","等反馈修改","已发布"];
+  let pgb = ""; const pgmax = Math.max(...Object.values(pgc),1);
+  pgOrder.forEach(p => {
+    const c = pgc[p]||0;
+    pgb += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><div style="width:80px;font-size:13px;font-weight:500;">${esc(p)}</div><div style="flex:1;background:var(--bg);border-radius:4px;height:24px;overflow:hidden;"><div style="width:${c/pgmax*100}%;height:100%;background:${pgColors[p]||"#999"};border-radius:4px;display:flex;align-items:center;padding-left:8px;color:white;font-size:12px;font-weight:600;">${c}</div></div></div>`;
+  });
+  document.getElementById("progress-chart").innerHTML = pgb;
+
+  // Editor workload
+  const ec = {}; orders.forEach(o => { const e = o["剪辑师"]||"未分配"; ec[e] = (ec[e]||0)+1; });
+  const ecolors = {"鸭老师":"#ef4444","伊老师":"#3b82f6","sasa":"#f59e0b","青迟":"#10b981","不需要":"#d1d5db","未分配":"#9ca3af"};
+  let eb = ""; const emax = Math.max(...Object.values(ec),1);
+  Object.entries(ec).sort((a,b)=>b[1]-a[1]).forEach(([e,c]) => {
+    eb += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><div style="width:70px;font-size:13px;font-weight:500;">${esc(e)}</div><div style="flex:1;background:var(--bg);border-radius:4px;height:24px;overflow:hidden;"><div style="width:${c/emax*100}%;height:100%;background:${ecolors[e]||"#999"};border-radius:4px;display:flex;align-items:center;padding-left:8px;color:white;font-size:12px;font-weight:600;">${c}</div></div></div>`;
+  });
+  document.getElementById("editor-chart").innerHTML = eb;
+
+  // Recent orders
+  const recent = [...orders].sort((a,b)=>(b["发布档期"]||"").localeCompare(a["发布档期"]||"")).slice(0,10);
+  let or = `<table><thead><tr><th>品牌产品</th><th>平台</th><th>发布档期</th><th>制作进度</th><th>剪辑师</th><th>下单进度</th></tr></thead><tbody>`;
+  recent.forEach((o,i) => {
+    const idx = orders.indexOf(o);
+    const brand = esc((o["品牌产品"]||"").replace(/\n/g," ").substring(0,22));
+    or += `<tr><td>${brand}${(o["品牌产品"]||"").length>22?"...":""}</td><td>${platformBadge(o["合作平台"])}</td><td>${esc(o["发布档期"]||"-")}</td><td>${editSelect("制作进度",o["制作进度"],PROGRESS_OPTIONS,"orders",idx)}</td><td>${editSelect("剪辑师",o["剪辑师"],EDITORS,"orders",idx)}</td><td><span class="badge ${progressBadgeClass(o["下单进度"])}">${esc(o["下单进度"]||"-")}</span></td></tr>`;
+  });
+  or += "</tbody></table>";
+  document.getElementById("recent-orders").innerHTML = or;
+
+  // Todo list
+  const todos = [];
+  orders.filter(o => o["下单进度"] === "待下单").forEach(o => todos.push({text:(o["品牌产品"]||"").replace(/\n/g," ").substring(0,28)+" - 待下单",type:"warning"}));
+  orders.filter(o => o["制作进度"] === "等反馈修改").forEach(o => todos.push({text:(o["品牌产品"]||"").replace(/\n/g," ").substring(0,28)+" - 等反馈修改",type:"info"}));
+  orders.filter(o => o["制作进度"] && o["制作进度"] !== "已发布" && o["制作进度"] !== "待开始" && o["发布档期"] && o["发布档期"] <= "2026-08-10").forEach(o => todos.push({text:(o["品牌产品"]||"").replace(/\n/g," ").substring(0,28)+" - 即将到期!",type:"danger"}));
+  agreements.filter(a => a["协议进度"] === "待对方签署").forEach(a => todos.push({text:a["合作项目"]+" - 待对方签署协议",type:"danger"}));
+  orders.filter(o => o["返点进度"] === "待我方打款").forEach(o => todos.push({text:(o["品牌产品"]||"").replace(/\n/g," ").substring(0,28)+" - 待我方打款",type:"danger"}));
+
+  let th = "";
+  if (todos.length === 0) th = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">暂无待办事项</div>';
+  else todos.forEach(t => {
+    const cls = t.type==="warning"?"badge-warning":t.type==="danger"?"badge-danger":"badge-info";
+    const label = t.type==="warning"?"待处理":t.type==="danger"?"紧急":"提醒";
+    th += `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);"><span class="badge ${cls}">${label}</span><span style="font-size:13px;">${esc(t.text)}</span></div>`;
+  });
+  document.getElementById("todo-list").innerHTML = th;
+}
+
+// === Schedule ===
+function renderCalendar() {
+  const mv = document.getElementById("schedule-month").value;
+  const [yr, mo] = mv.split("-").map(Number);
+  const edFilter = document.getElementById("schedule-editor-filter").value;
+  const schedule = APP_DATA["档期表"].data;
+  const today = "2026-08-08";
+  const smap = {};
+  schedule.forEach(s => { if (s["日期"]) smap[s["日期"]] = s; });
+
+  const firstDay = new Date(yr, mo-1, 1).getDay();
+  const daysInMonth = new Date(yr, mo, 0).getDate();
+  const wd = ["日","一","二","三","四","五","六"];
+  let html = '<div class="calendar-grid">';
+  wd.forEach(d => html += `<div class="calendar-header">${d}</div>`);
+  for (let i = 0; i < firstDay; i++) html += '<div class="calendar-cell empty"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${yr}-${String(mo).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const s = smap[ds];
+    const isToday = ds === today;
+    const hasUpdate = s && s["是否有更新"] === "有更新";
+    let events = "";
+    if (hasUpdate) {
+      const type = s["类型"] === "商单作品" ? "event-commercial" : "event-regular";
+      const label = (s["备注"] || s["类型"] || "更新").substring(0, 14);
+      events += `<div class="calendar-event ${type}">${esc(label)}</div>`;
+      if (s["平台"]) events += `<div class="calendar-event" style="background:#f3f4f6;color:#6b7280;">${esc(s["平台"])}</div>`;
+      if (s["剪辑师"]) events += `<div class="cal-editor">${esc(s["剪辑师"])}</div>`;
+    }
+    html += `<div class="calendar-cell ${hasUpdate?"has-update":""} ${isToday?"today":""}" onclick="editSchedule('${ds}')"><div class="day-num">${d}</div>${events}</div>`;
+  }
+  html += "</div>";
+  document.getElementById("calendar-container").innerHTML = html;
+
+  // Detail table
+  let ms = schedule.filter(s => s["日期"] && s["日期"].startsWith(mv) && s["是否有更新"] === "有更新").sort((a,b)=>(a["日期"]||"").localeCompare(b["日期"]||""));
+  if (edFilter) ms = ms.filter(s => s["剪辑师"] === edFilter);
+  let dh = `<table><thead><tr><th>日期</th><th>类型</th><th>平台</th><th>内容/品牌</th><th>剪辑师</th></tr></thead><tbody>`;
+  if (ms.length === 0) dh += '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-secondary);">暂无排期</td></tr>';
+  else ms.forEach(s => {
+    const idx = schedule.indexOf(s);
+    dh += `<tr><td>${esc(s["日期"])}</td><td>${editSelect("类型",s["类型"],SCHEDULE_TYPE,"schedule",idx)}</td><td>${s["平台"]?s["平台"].split(",").map(p=>platformBadge(p.trim())).join(" "):"-"}</td><td>${esc(s["备注"]||"-")}</td><td>${editSelect("剪辑师",s["剪辑师"],EDITORS,"schedule",idx)}</td></tr>`;
+  });
+  dh += "</tbody></table>";
+  document.getElementById("schedule-detail").innerHTML = dh;
+}
+
+function editSchedule(dateStr) {
+  const schedule = APP_DATA["档期表"].data;
+  let s = schedule.find(x => x["日期"] === dateStr);
+  if (!s) return;
+  const idx = schedule.indexOf(s);
+  if (s["是否有更新"] !== "有更新") {
+    if (!confirm(`为 ${dateStr} 添加排期？`)) return;
+    pushBatch("档期表", idx, [{ field: "是否有更新", value: "有更新" }, { field: "类型", value: "商单作品" }]);
+  }
+  const editors = EDITORS;
+  const types = SCHEDULE_TYPE;
+  showModal(`
+    <h2>${dateStr} 排期编辑</h2>
+    <div class="modal-row"><div class="modal-label">类型</div><div class="modal-value"><select class="edit-select" id="modal-type">${types.map(t=>`<option value="${t}" ${s["类型"]===t?"selected":""}>${t}</option>`).join("")}</select></div></div>
+    <div class="modal-row"><div class="modal-label">平台</div><div class="modal-value"><input class="edit-input" id="modal-platform" value="${esc(s["平台"]||"")}" placeholder="如:抖音,小红书"></div></div>
+    <div class="modal-row"><div class="modal-label">内容/品牌</div><div class="modal-value"><input class="edit-input" id="modal-remark" value="${esc(s["备注"]||"")}"></div></div>
+    <div class="modal-row"><div class="modal-label">剪辑师</div><div class="modal-value"><select class="edit-select" id="modal-editor">${editors.map(e=>`<option value="${e}" ${s["剪辑师"]===e?"selected":""}>${e||"未分配"}</option>`).join("")}</select></div></div>
+    <div style="margin-top:20px;display:flex;gap:12px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveScheduleEdit(${idx})">保存</button>
+    </div>
+  `);
+}
+
+function saveScheduleEdit(idx) {
+  const changes = [
+    { field: "类型", value: document.getElementById("modal-type").value },
+    { field: "平台", value: document.getElementById("modal-platform").value || null },
+    { field: "备注", value: document.getElementById("modal-remark").value || null },
+    { field: "剪辑师", value: document.getElementById("modal-editor").value || null }
+  ];
+  pushBatch("档期表", idx, changes);
+  closeModal();
+}
+
+// === Orders ===
+function renderOrders() {
+  const pf = document.getElementById("order-platform-filter").value;
+  const pgf = document.getElementById("order-progress-filter").value;
+  const ef = document.getElementById("order-editor-filter").value;
+  const search = document.getElementById("order-search").value.toLowerCase();
+  const orders = APP_DATA["合作表"].data;
+
+  let filtered = orders.filter(o => {
+    if (pf && o["合作平台"] !== pf) return false;
+    if (pgf && (o["制作进度"]||"待开始") !== pgf) return false;
+    if (ef === "未分配" && o["剪辑师"]) return false;
+    if (ef && ef !== "未分配" && o["剪辑师"] !== ef) return false;
+    if (search && !(o["品牌产品"]||"").toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  let html = `<table><thead><tr>
+    <th>品牌产品</th><th>平台</th><th>发布档期</th><th>刊例价</th><th>制作进度</th><th>剪辑师</th><th>下单进度</th><th>返点进度</th><th>详情</th>
+  </tr></thead><tbody>`;
+  filtered.forEach(o => {
+    const idx = orders.indexOf(o);
+    const brand = esc((o["品牌产品"]||"").replace(/\n/g,"<br>"));
+    html += `<tr>
+      <td style="max-width:200px;">${brand}</td>
+      <td>${platformBadge(o["合作平台"])}</td>
+      <td>${esc(o["发布档期"]||"-")}</td>
+      <td>${fmtMoney(o["刊例价格"])}</td>
+      <td>${editSelect("制作进度",o["制作进度"],PROGRESS_OPTIONS,"orders",idx)}</td>
+      <td>${editSelect("剪辑师",o["剪辑师"],EDITORS,"orders",idx)}</td>
+      <td>${editSelect("下单进度",o["下单进度"],ORDER_PROGRESS,"orders",idx)}</td>
+      <td>${editSelect("返点进度",o["返点进度"],REBATE_PROGRESS,"orders",idx)}</td>
+      <td><a href="javascript:void(0)" onclick="showOrderDetail(${idx})" style="color:var(--primary);">查看</a></td>
+    </tr>`;
+  });
+  if (filtered.length === 0) html += '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-secondary);">暂无数据</td></tr>';
+  html += "</tbody></table>";
+  document.getElementById("orders-table").innerHTML = html;
+}
+
+function showOrderDetail(idx) {
+  const o = APP_DATA["合作表"].data[idx];
+  const metrics = [];
+  if (o["阅读播放"]) metrics.push(`阅读 ${o["阅读播放"].toLocaleString()}`);
+  if (o["点赞"]) metrics.push(`点赞 ${o["点赞"].toLocaleString()}`);
+  if (o["收藏"]) metrics.push(`收藏 ${o["收藏"].toLocaleString()}`);
+  if (o["评论"]) metrics.push(`评论 ${o["评论"].toLocaleString()}`);
+
+  showModal(`
+    <h2>${esc((o["品牌产品"]||"").replace(/\n/g," "))}</h2>
+    <div class="modal-row"><div class="modal-label">接单月份</div><div class="modal-value">${esc(o["接单月份"]||"-")}</div></div>
+    <div class="modal-row"><div class="modal-label">发布档期</div><div class="modal-value">${esc(o["发布档期"]||"-")}</div></div>
+    <div class="modal-row"><div class="modal-label">合作平台</div><div class="modal-value">${platformBadge(o["合作平台"])}</div></div>
+    <div class="modal-row"><div class="modal-label">刊例价格</div><div class="modal-value">${fmtMoney(o["刊例价格"])}</div></div>
+    <div class="modal-row"><div class="modal-label">返点</div><div class="modal-value">${fmtPct(o["返点"])} ${o["返点方式"]?"("+esc(o["返点方式"].replace(/\n/g," "))+")":""}</div></div>
+    <div class="modal-row"><div class="modal-label">制作进度</div><div class="modal-value">${editSelect("制作进度",o["制作进度"],PROGRESS_OPTIONS,"orders",idx)}</div></div>
+    <div class="modal-row"><div class="modal-label">剪辑师</div><div class="modal-value">${editSelect("剪辑师",o["剪辑师"],EDITORS,"orders",idx)}</div></div>
+    <div class="modal-row"><div class="modal-label">下单进度</div><div class="modal-value">${editSelect("下单进度",o["下单进度"],ORDER_PROGRESS,"orders",idx)}</div></div>
+    <div class="modal-row"><div class="modal-label">返点进度</div><div class="modal-value">${editSelect("返点进度",o["返点进度"],REBATE_PROGRESS,"orders",idx)}</div></div>
+    <div class="modal-row"><div class="modal-label">作品类型</div><div class="modal-value">${esc(o["作品类型"]||"-")}</div></div>
+    <div class="modal-row"><div class="modal-label">是否实拍</div><div class="modal-value">${esc(o["是否实拍"]||"-")}</div></div>
+    ${o["时间线"]?`<div class="modal-row"><div class="modal-label">时间线</div><div class="modal-value" style="white-space:pre-line;">${esc(o["时间线"])}</div></div>`:""}
+    ${o["合作要求：重要‼️ 一定每个点开看"]?`<div class="modal-row"><div class="modal-label">合作要求</div><div class="modal-value" style="white-space:pre-line;">${esc(o["合作要求：重要‼️ 一定每个点开看"])}</div></div>`:""}
+    ${metrics.length?`<div class="modal-row"><div class="modal-label">数据表现</div><div class="modal-value">${metrics.join(" | ")}</div></div>`:""}
+    ${o["发布链接"]?`<div class="modal-row"><div class="modal-label">发布链接</div><div class="modal-value"><a href="${esc(o["发布链接"].trim())}" target="_blank" style="color:var(--primary);">点击查看</a></div></div>`:""}
+    <div style="margin-top:20px;text-align:right;">
+      <button class="btn btn-danger" onclick="deleteOrder(${idx})">删除订单</button>
+      <button class="btn btn-primary" onclick="closeModal()">关闭</button>
+    </div>
+  `);
+}
+
+function addOrder() {
+  const platformOpts = ["抖音","小红书","B站","视频号","豆瓣"].map(p=>`<option>${p}</option>`).join("");
+  const editorOpts = EDITORS.map(e=>`<option value="${e}">${e||"（空）"}</option>`).join("");
+  const progOpts = PROGRESS_OPTIONS.map(p=>`<option>${p}</option>`).join("");
+  const orderProgOpts = ORDER_PROGRESS.map(p=>`<option>${p}</option>`).join("");
+  const rebateProgOpts = REBATE_PROGRESS.map(p=>`<option>${p}</option>`).join("");
+  const grid = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;margin-top:8px;">
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">品牌产品 *</label><input id="no-brand" style="width:100%;" placeholder="如：xx品牌种草"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">合作平台</label><select id="no-platform" style="width:100%;">${platformOpts}</select></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">接单月份</label><input id="no-month" style="width:100%;" placeholder="如：8月"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">发布档期</label><input id="no-schedule" style="width:100%;" placeholder="如：8.20"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">刊例价格(元)</label><input id="no-price" type="number" style="width:100%;" placeholder="0"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">返点率(%)</label><input id="no-rebate" type="number" style="width:100%;" placeholder="如 20"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">返点方式</label><input id="no-rebateway" style="width:100%;" placeholder="如：公对公"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">剪辑师</label><select id="no-editor" style="width:100%;">${editorOpts}</select></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">制作进度</label><select id="no-progress" style="width:100%;">${progOpts}</select></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">下单进度</label><select id="no-orderprog" style="width:100%;">${orderProgOpts}</select></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">返点进度</label><select id="no-rebateprog" style="width:100%;">${rebateProgOpts}</select></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">作品类型</label><input id="no-type" style="width:100%;" placeholder="如：种草视频"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">是否实拍</label><select id="no-shot" style="width:100%;"><option value="">-</option><option value="是">是</option><option value="否">否</option></select></div>
+    </div>`;
+  showModal(`<h2>新增合作订单</h2>${grid}
+    <div style="margin-top:20px;text-align:right;">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="submitNewOrder()">保存订单</button>
+    </div>`);
+}
+
+function submitNewOrder() {
+  const brand = document.getElementById("no-brand").value.trim();
+  if (!brand) { alert("请填写品牌产品"); return; }
+  const price = parseFloat(document.getElementById("no-price").value) || 0;
+  const rebatePct = parseFloat(document.getElementById("no-rebate").value) || 0;
+  const row = {
+    "品牌产品": brand,
+    "合作平台": document.getElementById("no-platform").value,
+    "接单月份": document.getElementById("no-month").value.trim(),
+    "发布档期": document.getElementById("no-schedule").value.trim(),
+    "刊例价格": price,
+    "返点": rebatePct / 100,
+    "返点方式": document.getElementById("no-rebateway").value.trim(),
+    "剪辑师": document.getElementById("no-editor").value,
+    "制作进度": document.getElementById("no-progress").value || "待开始",
+    "下单进度": document.getElementById("no-orderprog").value,
+    "返点进度": document.getElementById("no-rebateprog").value,
+    "作品类型": document.getElementById("no-type").value.trim(),
+    "是否实拍": document.getElementById("no-shot").value
+  };
+  API.req("/api/add", { method: "POST", body: { sheet: "合作表", row } })
+    .then(() => { closeModal(); showSaved(); })
+    .catch(err => showError(err.message));
+}
+
+function deleteOrder(idx) {
+  if (!confirm("确定删除该订单吗？此操作会同步给所有在线成员。")) return;
+  API.req("/api/delete", { method: "POST", body: { sheet: "合作表", index: idx } })
+    .then(() => { closeModal(); showSaved(); })
+    .catch(err => showError(err.message));
+}
+
+// === Agreements ===
+function renderAgreements() {
+  const agreements = APP_DATA["合作协议进度"].data;
+  const totalAmount = agreements.reduce((s,a)=>s+(typeof a["涉及金额"]==="number"?a["涉及金额"]:0),0);
+  const signed = agreements.filter(a=>a["协议进度"]==="双方已签署").length;
+  const pending = agreements.filter(a=>a["协议进度"]==="待对方签署").length;
+
+  document.getElementById("agreement-kpi").innerHTML = `
+    <div class="kpi-card purple"><div class="kpi-label">协议总数</div><div class="kpi-value">${agreements.length}</div><div class="kpi-sub">涉及打款 ${agreements.filter(a=>a["是否涉及打款"]==="是").length} 项</div></div>
+    <div class="kpi-card green"><div class="kpi-label">已签署</div><div class="kpi-value">${signed}</div><div class="kpi-sub">双方已签署完成</div></div>
+    <div class="kpi-card orange"><div class="kpi-label">待签署</div><div class="kpi-value">${pending}</div><div class="kpi-sub">待对方签署</div></div>
+    <div class="kpi-card blue"><div class="kpi-label">涉及总金额</div><div class="kpi-value">\u00a5${totalAmount.toLocaleString()}</div><div class="kpi-sub">水下合作金额</div></div>
+  `;
+
+  let html = `<table><thead><tr><th>合作项目</th><th>协议类型</th><th>涉及打款</th><th>涉及金额</th><th>金额目的</th><th>协议进度</th><th>其他进度</th><th>备注</th></tr></thead><tbody>`;
+  agreements.forEach((a,i) => {
+    html += `<tr>
+      <td style="font-weight:500;">${esc(a["合作项目"]||"-")}</td>
+      <td><span class="badge ${a["协议类型"]&&a["协议类型"].includes("水下")?"badge-purple":"badge-info"}">${esc(a["协议类型"]||"-")}</span></td>
+      <td>${a["是否涉及打款"]==="是"?'<span class="badge badge-danger">是</span>':'<span class="badge badge-gray">否</span>'}</td>
+      <td>${fmtMoney(a["涉及金额"])}</td>
+      <td>${esc(a["金额目的"]||"-")}</td>
+      <td>${editSelect("协议进度",a["协议进度"],AGREEMENT_PROGRESS,"agreements",i)}</td>
+      <td>${esc(a["其他进度"]||"-")}</td>
+      <td>${esc(a["备注"]||"-")}</td>
+    </tr>`;
+  });
+  html += "</tbody></table>";
+  document.getElementById("agreements-table").innerHTML = html;
+}
+
+// === Contacts ===
+function renderContacts() {
+  const sf = document.getElementById("contact-status-filter").value;
+  const srcf = document.getElementById("contact-source-filter").value;
+  const search = document.getElementById("contact-search").value.toLowerCase();
+  const contacts = APP_DATA["建联表"].data;
+  let filtered = contacts.filter(c => {
+    if (sf && c["沟通状态"] !== sf) return false;
+    if (srcf && c["来源"] !== srcf) return false;
+    if (search) { const t = ((c["项目"]||"")+(c["联系方式 微信/电话"]||"")).toLowerCase(); if (!t.includes(search)) return false; }
+    return true;
+  });
+  let html = `<table><thead><tr><th>日期</th><th>联系方式</th><th>来源</th><th>沟通状态</th><th>项目</th><th>备注</th></tr></thead><tbody>`;
+  filtered.forEach((c,i) => {
+    const idx = contacts.indexOf(c);
+    const statusCls = c["沟通状态"]==="确认合作"?"badge-success":c["沟通状态"]==="无法合作"?"badge-danger":c["沟通状态"]==="提报合作中"?"badge-info":"badge-warning";
+    html += `<tr>
+      <td>${esc(c["日期"]||"-")}</td>
+      <td style="font-size:12px;">${esc(String(c["联系方式 微信/电话"]||"-").trim())}</td>
+      <td>${c["来源"]?platformBadge(c["来源"]):"-"}</td>
+      <td>${editSelect("沟通状态",c["沟通状态"],CONTACT_STATUS,"contacts",idx)}</td>
+      <td style="max-width:200px;">${esc(c["项目"]||"-")}</td>
+      <td style="font-size:12px;">${esc(String(c["备注"]||"-"))}</td>
+    </tr>`;
+  });
+  if (filtered.length === 0) html += '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-secondary);">暂无数据</td></tr>';
+  html += "</tbody></table>";
+  document.getElementById("contacts-table").innerHTML = html;
+}
+
+// === Rate Card ===
+function renderRateCard() {
+  const rd = APP_DATA["月度刊例价"].data;
+  const platforms = ["小红书","抖音","视频号","B站","微博","小宇宙","豆瓣"];
+  let html = `<table><thead><tr><th style="text-align:left;">月份</th>` + platforms.map(p=>`<th>${esc(p)}</th>`).join("") + `</tr></thead><tbody>`;
+  const monthRows = [{m:"6月",r:rd[0]},{m:"7月(初)",r:rd[1]},{m:"7月(调)",r:rd[2]},{m:"8月",r:rd[3]}];
+  monthRows.forEach(mr => {
+    html += `<tr><td style="font-weight:600;text-align:left;">${mr.m}</td>`;
+    platforms.forEach(p => {
+      const v = mr.r[p]; let d = "-";
+      if (typeof v === "number") d = "\u00a5" + v.toLocaleString();
+      else if (v && v !== "-") d = esc(v);
+      html += `<td style="text-align:center;font-weight:600;color:${typeof v==="number"?"var(--primary)":"var(--text-secondary)"};">${d}</td>`;
+    });
+    html += "</tr>";
+  });
+  html += "</tbody></table>";
+  document.getElementById("rate-table").innerHTML = html;
+
+  const combos = [{l:"抖音+小红书",k:"小红书"},{l:"抖音+小红书+视频号",k:"视频号"},{l:"抖音+小红书+B站",k:"微博"},{l:"抖音+小红书+小宇宙",k:"豆瓣"}];
+  let ch = `<table><thead><tr><th style="text-align:left;">组合方案</th><th>6月折扣</th><th>7月折扣</th><th>8月折扣</th></tr></thead><tbody>`;
+  combos.forEach((c,i) => {
+    const r6 = rd[5][c.k], r7 = rd[6][c.k]||rd[7][c.k], r8 = rd[8][c.k];
+    ch += `<tr><td style="font-weight:600;text-align:left;">${esc(c.l)}</td>`;
+    ch += `<td style="text-align:center;">${typeof r6==="number"?(r6*100).toFixed(0)+"%":esc(r6||"-")}</td>`;
+    ch += `<td style="text-align:center;">${typeof r7==="number"?(r7*100).toFixed(0)+"%":esc(r7||"-")}</td>`;
+    ch += `<td style="text-align:center;">${typeof r8==="number"?(r8*100).toFixed(0)+"%":esc(r8||"-")}</td></tr>`;
+  });
+  ch += "</tbody></table>";
+  document.getElementById("combo-table").innerHTML = ch;
+}
+
+// === Modal ===
+function showModal(html) {
+  document.getElementById("modal-content").innerHTML = html + '<span class="modal-close" onclick="closeModal()">&times;</span>';
+  document.getElementById("modal-overlay").classList.add("show");
+}
+function closeModal(e) {
+  if (e && e.target.id !== "modal-overlay") return;
+  document.getElementById("modal-overlay").classList.remove("show");
+}
+
+// === Analytics ===
+function renderAnalytics() {
+  const orders = APP_DATA["合作表"].data;
+  const metric = document.getElementById("analytics-metric") ? document.getElementById("analytics-metric").value : "all";
+
+  function getPrice(o) { const v = o["刊例价格"]; return (typeof v === "number") ? v : 0; }
+  function getRebateRate(o) { const v = o["返点"]; return (typeof v === "number") ? v : 0; }
+  function getRebateAmt(o) { return getPrice(o) * getRebateRate(o); }
+  function getNet(o) { return getPrice(o) - getRebateAmt(o); }
+
+  // KPIs
+  let totalPrice = 0, totalRebate = 0, totalNet = 0, count = 0;
+  orders.forEach(o => { totalPrice += getPrice(o); totalRebate += getRebateAmt(o); totalNet += getNet(o); count++; });
+  const avgRebateRate = totalPrice > 0 ? totalRebate / totalPrice : 0;
+  const avgOrder = count > 0 ? totalPrice / count : 0;
+
+  document.getElementById("analytics-kpi").innerHTML = `
+    <div class="kpi-card purple"><div class="kpi-label">总刊例价</div><div class="kpi-value">\u00a5${totalPrice.toLocaleString()}</div><div class="kpi-sub">${count} 个订单</div></div>
+    <div class="kpi-card orange"><div class="kpi-label">总返点金额</div><div class="kpi-value">\u00a5${totalRebate.toLocaleString()}</div><div class="kpi-sub">综合返点率 ${(avgRebateRate*100).toFixed(1)}%</div></div>
+    <div class="kpi-card green"><div class="kpi-label">实际收入</div><div class="kpi-value">\u00a5${totalNet.toLocaleString()}</div><div class="kpi-sub">刊例价 - 返点</div></div>
+    <div class="kpi-card blue"><div class="kpi-label">平均客单价</div><div class="kpi-value">\u00a5${avgOrder.toLocaleString()}</div><div class="kpi-sub">单笔刊例均价</div></div>
+  `;
+
+  // Monthly aggregation
+  const monthMap = {};
+  orders.forEach(o => {
+    const m = o["接单月份"] || "未标注";
+    if (!monthMap[m]) monthMap[m] = { price: 0, rebate: 0, net: 0, count: 0 };
+    monthMap[m].price += getPrice(o);
+    monthMap[m].rebate += getRebateAmt(o);
+    monthMap[m].net += getNet(o);
+    monthMap[m].count++;
+  });
+  const monthOrder = Object.keys(monthMap).sort((a, b) => {
+    const na = parseInt(a) || 0, nb = parseInt(b) || 999;
+    return na - nb;
+  });
+
+  // Monthly grouped bar chart
+  const maxVal = Math.max(...monthOrder.map(m => monthMap[m].price), 1);
+  const showPrice = metric === "all" || metric === "price";
+  const showRebate = metric === "all" || metric === "rebate";
+  const showNet = metric === "all" || metric === "net";
+  const barCount = (showPrice?1:0) + (showRebate?1:0) + (showNet?1:0);
+
+  let monthlyHtml = '<div style="display:flex;align-items:flex-end;justify-content:space-around;height:260px;padding:0 10px;gap:8px;">';
+  monthOrder.forEach(m => {
+    const d = monthMap[m];
+    const ph = showPrice ? (d.price/maxVal*200) : 0;
+    const rh = showRebate ? (d.rebate/maxVal*200) : 0;
+    const nh = showNet ? (d.net/maxVal*200) : 0;
+    monthlyHtml += `
+      <div style="flex:1;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;">
+        <div style="display:flex;gap:3px;align-items:flex-end;height:200px;">
+          ${showPrice ? `<div title="刊例价" style="width:${Math.max(22/barCount,14)}px;background:var(--primary);border-radius:4px 4px 0 0;height:${ph}px;"></div>` : ""}
+          ${showRebate ? `<div title="返点金额" style="width:${Math.max(22/barCount,14)}px;background:var(--warning);border-radius:4px 4px 0 0;height:${rh}px;"></div>` : ""}
+          ${showNet ? `<div title="实际收入" style="width:${Math.max(22/barCount,14)}px;background:var(--success);border-radius:4px 4px 0 0;height:${nh}px;"></div>` : ""}
+        </div>
+        <div style="font-size:13px;font-weight:600;margin-top:6px;">${esc(m)}</div>
+        <div style="font-size:11px;color:var(--text-secondary);">${d.count}单</div>
+      </div>`;
+  });
+  monthlyHtml += '</div>';
+  // legend
+  let legend = '<div style="display:flex;gap:16px;justify-content:center;margin-top:12px;font-size:12px;">';
+  if (showPrice) legend += '<span><span style="display:inline-block;width:12px;height:12px;background:var(--primary);border-radius:2px;margin-right:4px;vertical-align:middle;"></span>刊例价</span>';
+  if (showRebate) legend += '<span><span style="display:inline-block;width:12px;height:12px;background:var(--warning);border-radius:2px;margin-right:4px;vertical-align:middle;"></span>返点金额</span>';
+  if (showNet) legend += '<span><span style="display:inline-block;width:12px;height:12px;background:var(--success);border-radius:2px;margin-right:4px;vertical-align:middle;"></span>实际收入</span>';
+  legend += '</div>';
+  document.getElementById("monthly-compare-chart").innerHTML = monthlyHtml + legend;
+
+  // 环比增长率 (period comparison)
+  let growthHtml = '<table style="margin-top:8px;"><thead><tr><th>月份</th><th>刊例价</th><th>环比增长</th><th>返点金额</th><th>实际收入</th></tr></thead><tbody>';
+  let prevPrice = null;
+  monthOrder.forEach(m => {
+    const d = monthMap[m];
+    let growthCell = '<td style="color:var(--text-secondary);">-</td>';
+    if (prevPrice !== null && prevPrice > 0) {
+      const g = (d.price - prevPrice) / prevPrice * 100;
+      const cls = g >= 0 ? "badge-success" : "badge-danger";
+      growthCell = `<td><span class="badge ${cls}">${g >= 0 ? "+" : ""}${g.toFixed(1)}%</span></td>`;
+    }
+    growthHtml += `<tr><td style="font-weight:600;">${esc(m)}</td><td style="font-weight:600;color:var(--primary);">\u00a5${d.price.toLocaleString()}</td>${growthCell}<td style="color:var(--warning);">\u00a5${d.rebate.toLocaleString()}</td><td style="color:var(--success);">\u00a5${d.net.toLocaleString()}</td></tr>`;
+    prevPrice = d.price;
+  });
+  growthHtml += '</tbody></table>';
+  document.getElementById("monthly-growth").innerHTML = '<div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text-secondary);">环比增长率（周期对比）</div>' + growthHtml;
+
+  // Platform aggregation
+  const platMap = {};
+  orders.forEach(o => {
+    const p = o["合作平台"] || "未标注";
+    if (!platMap[p]) platMap[p] = { price: 0, rebate: 0, net: 0, count: 0 };
+    platMap[p].price += getPrice(o);
+    platMap[p].rebate += getRebateAmt(o);
+    platMap[p].net += getNet(o);
+    platMap[p].count++;
+  });
+  const platOrder = Object.keys(platMap).sort((a, b) => platMap[b].price - platMap[a].price);
+  const platColors = { "抖音": "#ef4444", "小红书": "#f59e0b", "B站": "#3b82f6", "视频号": "#10b981", "微博": "#8b5cf6", "豆瓣": "#6b7280" };
+
+  // Platform horizontal comparison - 刊例价
+  const maxPlat = Math.max(...platOrder.map(p => platMap[p].price), 1);
+  let platHtml = "";
+  platOrder.forEach(p => {
+    const d = platMap[p];
+    const pct = d.price / maxPlat * 100;
+    platHtml += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <div style="width:70px;font-size:13px;font-weight:500;">${esc(p)}</div>
+      <div style="flex:1;background:var(--bg);border-radius:4px;height:28px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:${platColors[p]||"#999"};border-radius:4px;display:flex;align-items:center;padding-left:8px;color:white;font-size:12px;font-weight:600;">\u00a5${d.price.toLocaleString()}</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById("platform-compare-chart").innerHTML = platHtml;
+
+  // Platform rebate rate comparison
+  const rebateOrder = [...platOrder].sort((a, b) => (platMap[b].rebate/platMap[b].price) - (platMap[a].rebate/platMap[a].price));
+  let rebateHtml = "";
+  rebateOrder.forEach(p => {
+    const d = platMap[p];
+    const rate = d.price > 0 ? d.rebate / d.price : 0;
+    rebateHtml += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <div style="width:70px;font-size:13px;font-weight:500;">${esc(p)}</div>
+      <div style="flex:1;background:var(--bg);border-radius:4px;height:28px;overflow:hidden;">
+        <div style="width:${rate*100}%;height:100%;background:var(--warning);border-radius:4px;display:flex;align-items:center;padding-left:8px;color:#92400e;font-size:12px;font-weight:600;">${(rate*100).toFixed(1)}%</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById("platform-rebate-chart").innerHTML = rebateHtml;
+
+  // Cross matrix: platform × month
+  let matrixHtml = '<table><thead><tr><th style="text-align:left;">平台 \\ 月份</th>';
+  monthOrder.forEach(m => matrixHtml += `<th>${esc(m)}</th>`);
+  matrixHtml += '<th>合计</th></tr></thead><tbody>';
+  platOrder.forEach(p => {
+    matrixHtml += `<tr><td style="font-weight:600;text-align:left;">${esc(p)}</td>`;
+    let rowTotal = 0;
+    monthOrder.forEach(m => {
+      const cellOrders = orders.filter(o => (o["合作平台"]||"未标注") === p && (o["接单月份"]||"未标注") === m);
+      const cp = cellOrders.reduce((s, o) => s + getPrice(o), 0);
+      const cr = cellOrders.reduce((s, o) => s + getRebateAmt(o), 0);
+      rowTotal += cp;
+      if (cp > 0) {
+        matrixHtml += `<td style="text-align:center;"><div style="font-weight:600;color:var(--primary);">\u00a5${cp.toLocaleString()}</div><div style="font-size:11px;color:var(--text-secondary);">返点\u00a5${cr.toLocaleString()}</div></td>`;
+      } else {
+        matrixHtml += '<td style="text-align:center;color:var(--text-secondary);">-</td>';
+      }
+    });
+    matrixHtml += `<td style="text-align:center;font-weight:700;">\u00a5${rowTotal.toLocaleString()}</td></tr>`;
+  });
+  matrixHtml += '<tr style="border-top:2px solid var(--border);"><td style="font-weight:700;text-align:left;">合计</td>';
+  let grandTotal = 0;
+  monthOrder.forEach(m => {
+    const cp = orders.filter(o => (o["接单月份"]||"未标注") === m).reduce((s, o) => s + getPrice(o), 0);
+    grandTotal += cp;
+    matrixHtml += `<td style="text-align:center;font-weight:700;">\u00a5${cp.toLocaleString()}</td>`;
+  });
+  matrixHtml += `<td style="text-align:center;font-weight:700;color:var(--primary);">\u00a5${grandTotal.toLocaleString()}</td></tr>`;
+  matrixHtml += '</tbody></table>';
+  document.getElementById("cross-matrix").innerHTML = matrixHtml;
+
+  // Platform detail table
+  let detailHtml = '<table><thead><tr><th>平台</th><th>订单数</th><th>刊例价合计</th><th>返点金额</th><th>返点率</th><th>实际收入</th><th>单均价</th></tr></thead><tbody>';
+  platOrder.forEach(p => {
+    const d = platMap[p];
+    const rate = d.price > 0 ? d.rebate / d.price : 0;
+    const avg = d.count > 0 ? d.price / d.count : 0;
+    detailHtml += `<tr>
+      <td>${platformBadge(p)}</td>
+      <td>${d.count}</td>
+      <td style="font-weight:600;color:var(--primary);">\u00a5${d.price.toLocaleString()}</td>
+      <td style="color:var(--warning);">\u00a5${d.rebate.toLocaleString()}</td>
+      <td>${(rate*100).toFixed(1)}%</td>
+      <td style="color:var(--success);font-weight:600;">\u00a5${d.net.toLocaleString()}</td>
+      <td>\u00a5${avg.toLocaleString()}</td>
+    </tr>`;
+  });
+  detailHtml += '</tbody></table>';
+  document.getElementById("platform-detail-table").innerHTML = detailHtml;
+}
+
+// === Render All ===
+function renderAll() {
+  renderDashboard();
+  renderCalendar();
+  renderOrders();
+  renderAgreements();
+  renderContacts();
+  renderRateCard();
+  renderAnalytics();
+}
+
+// === 登录与用户管理 (服务器端鉴权) ===
+function showLogin() {
+  document.getElementById("login-overlay").classList.remove("hidden");
+  document.getElementById("login-username").value = "";
+  document.getElementById("login-password").value = "";
+  setTimeout(() => { const u = document.getElementById("login-username"); if (u) u.focus(); }, 100);
+}
+
+async function checkAuth() {
+  try {
+    const me = await API.req("/api/me");
+    CURRENT_USER = me;
+    document.getElementById("login-overlay").classList.add("hidden");
+    document.getElementById("user-name").textContent = me.name || me.username;
+    document.getElementById("user-avatar").textContent = (me.name || me.username).charAt(0).toUpperCase();
+    return true;
+  } catch (e) {
+    CURRENT_USER = null;
+    showLogin();
+    return false;
+  }
+}
+
+async function doLogin() {
+  const username = document.getElementById("login-username").value.trim();
+  const password = document.getElementById("login-password").value;
+  const errorEl = document.getElementById("login-error");
+  if (!username || !password) { errorEl.textContent = "请输入用户名和密码"; errorEl.classList.add("show"); return; }
+  errorEl.classList.remove("show");
+  try {
+    const me = await API.req("/api/login", { method: "POST", body: { username, password } });
+    CURRENT_USER = me;
+    document.getElementById("login-overlay").classList.add("hidden");
+    document.getElementById("user-name").textContent = me.name || username;
+    document.getElementById("user-avatar").textContent = (me.name || username).charAt(0).toUpperCase();
+    document.getElementById("login-password").value = "";
+    await loadData();
+    renderAll();
+    connectSSE();
+    updateSyncStatus();
+  } catch (e) {
+    errorEl.textContent = "用户名或密码错误，请重试";
+    errorEl.classList.add("show");
+    document.getElementById("login-password").value = "";
+    const pw = document.getElementById("login-password"); if (pw) pw.focus();
+  }
+}
+
+async function doLogout() {
+  if (!confirm("确定要退出登录吗？")) return;
+  try { await API.req("/api/logout", { method: "POST" }); } catch (e) {}
+  CURRENT_USER = null;
+  APP_DATA = null;
+  showLogin();
+}
+
+async function openUserMgmt() {
+  if (!CURRENT_USER || CURRENT_USER.role !== "admin") {
+    showModal('<h2>用户管理</h2><p style="color:var(--text-secondary);">仅管理员可管理用户</p><div style="text-align:right;"><button class="btn btn-primary" onclick="closeModal()">关闭</button></div>');
+    return;
+  }
+  let users = [];
+  try { users = await API.req("/api/users"); } catch (e) { alert("加载用户失败：" + e.message); return; }
+  let userRows = "";
+  users.forEach(u => {
+    userRows += '<div class="user-mgmt-row"><div class="um-name">' + esc(u.username) + '</div><div class="um-role">' + esc(u.name || "") + ' (' + esc(u.role) + ')</div><button class="um-delete" onclick="changePassword(\'' + u.username + '\')">改密码</button>' + (u.username !== CURRENT_USER.username ? '<button class="um-delete" onclick="deleteUser(\'' + u.username + '\')">删除</button>' : '<span style="font-size:12px;color:var(--text-secondary);">当前用户</span>') + '</div>';
+  });
+  showModal('<h2>用户管理</h2><div style="margin-bottom:8px;font-size:13px;color:var(--text-secondary);">当前用户列表（数据实时存储在服务器，团队成员共享同一份）：</div>' + userRows + '<div style="margin-top:24px;margin-bottom:8px;font-size:13px;color:var(--text-secondary);">添加新用户：</div><div class="um-add-form"><input type="text" id="um-new-username" placeholder="用户名"><input type="text" id="um-new-name" placeholder="显示名称"><input type="password" id="um-new-password" placeholder="密码"><select id="um-new-role"><option value="member">普通成员</option><option value="admin">管理员</option></select><button onclick="addUser()">添加</button></div><div style="margin-top:24px;text-align:right;"><button class="btn btn-primary" onclick="closeModal()">完成</button></div>');
+}
+
+async function addUser() {
+  const username = document.getElementById("um-new-username").value.trim();
+  const name = document.getElementById("um-new-name").value.trim();
+  const password = document.getElementById("um-new-password").value;
+  const role = document.getElementById("um-new-role").value;
+  if (!username || !password) { alert("请填写用户名和密码"); return; }
+  try {
+    await API.req("/api/users", { method: "POST", body: { username, name, password, role } });
+    closeModal();
+    openUserMgmt();
+  } catch (e) { alert("添加失败：" + e.message); }
+}
+
+async function deleteUser(username) {
+  if (!confirm("确定删除用户 " + username + " 吗？")) return;
+  try {
+    await API.req("/api/users/" + encodeURIComponent(username), { method: "DELETE" });
+    closeModal();
+    openUserMgmt();
+  } catch (e) { alert("删除失败：" + e.message); }
+}
+
+async function changePassword(username) {
+  const newPwd = prompt("请输入 " + username + " 的新密码：");
+  if (!newPwd) return;
+  try {
+    await API.req("/api/changepwd", { method: "POST", body: { username, newPassword: newPwd } });
+    alert("密码已修改");
+    if (username === CURRENT_USER.username) closeModal(); else openUserMgmt();
+  } catch (e) { alert("修改失败：" + e.message); }
+}
+
+// === 初始化 ===
+(async function initApp() {
+  const ok = await checkAuth();
+  if (ok) {
+    try {
+      await loadData();
+      renderAll();
+      connectSSE();
+      updateSyncStatus();
+    } catch (e) {
+      console.error(e);
+      showLogin();
+    }
+  }
+})();
+</script>
+</body>
+</html>
