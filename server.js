@@ -16,6 +16,11 @@ const USERS_PATH = path.join(DATA_DIR, "users.json");
 const SESSION_MAX_AGE = 12 * 60 * 60 * 1000; // 12小时
 const ALLOWED_SHEETS = ["合作表", "建联表", "合作协议进度", "档期表", "月度刊例价"];
 
+// 飞书 OAuth 配置（通过环境变量注入，未配置则禁用飞书登录）
+const FEISHU_APP_ID = process.env.FEISHU_APP_ID;
+const FEISHU_APP_SECRET = process.env.FEISHU_APP_SECRET;
+function feishuEnabled() { return !!(FEISHU_APP_ID && FEISHU_APP_SECRET); }
+
 // ---------- 数据初始化 ----------
 function ensureStore() {
   if (!fs.existsSync(STORE_PATH)) {
@@ -114,6 +119,10 @@ function sendJSON(res, code, obj) {
   res.writeHead(code, { "Content-Type": "application/json; charset=utf-8" });
   res.end(body);
 }
+function sendHTML(res, code, html) {
+  res.writeHead(code, { "Content-Type": "text/html; charset=utf-8" });
+  res.end(html);
+}
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let data = "";
@@ -151,6 +160,18 @@ const server = http.createServer(async (req, res) => {
   try {
     // --- API ---
     if (p.startsWith("/api/")) {
+      // 飞书登录配置
+      if (p === "/api/config" && req.method === "GET") {
+        return sendJSON(res, 200, { feishuEnabled: feishuEnabled() });
+      }
+      // 飞书授权跳转
+      if (p === "/api/feishu/login" && req.method === "GET") {
+        if (!feishuEnabled()) return sendJSON(res, 400, { error: "飞书未配置" });
+        const redirectUri = `https://${req.headers.host}/api/feishu/callback`;
+        const authUrl = `https://open.feishu.cn/open-apis/authen/v1/authorize?app_id=${encodeURIComponent(FEISHU_APP_ID)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=lz`;
+        res.writeHead(302, { Location: authUrl });
+        return res.end();
+      }
       // 登录
       if (p === "/api/login" && req.method === "POST") {
         const body = await readBody(req);
@@ -189,6 +210,39 @@ const server = http.createServer(async (req, res) => {
         sseClients.add(res);
         req.on("close", () => sseClients.delete(res));
         return;
+      }
+
+      // 飞书 OAuth 回调（建立会话）
+      if (p === "/api/feishu/callback" && req.method === "GET") {
+        const code = url.searchParams.get("code");
+        if (!feishuEnabled()) return sendJSON(res, 400, { error: "飞书未配置" });
+        if (!code) return sendHTML(res, 400, "缺少授权码");
+        try {
+          const tkResp = await fetch("https://open.feishu.cn/open-apis/authen/v1/oidc/access_token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ grant_type: "authorization_code", code, app_id: FEISHU_APP_ID, app_secret: FEISHU_APP_SECRET })
+          });
+          const tkj = await tkResp.json();
+          if (!tkj || tkj.code !== 0) return sendHTML(res, 200, "飞书授权失败：" + (tkj && tkj.msg));
+          const accessToken = tkj.data.access_token;
+          const uiResp = await fetch("https://open.feishu.cn/open-apis/authen/v1/user_info?access_token=" + encodeURIComponent(accessToken));
+          const uij = await uiResp.json();
+          if (!uij || uij.code !== 0) return sendHTML(res, 200, "获取飞书用户信息失败");
+          const fsName = uij.data.name || "飞书用户";
+          const fsOpenId = uij.data.open_id;
+          const username = "fs:" + fsOpenId;
+          if (!USERS[username]) {
+            USERS[username] = { name: fsName, role: "member", salt: "", hash: "", feishu: true };
+            persistUsers();
+          }
+          const token = createSession(username, USERS[username].role);
+          setCookie(res, "sid", token, SESSION_MAX_AGE);
+          res.writeHead(302, { Location: "/" });
+          return res.end();
+        } catch (e) {
+          return sendHTML(res, 200, "飞书登录异常：" + e.message);
+        }
       }
 
       const session = getSessionFromReq(req);
