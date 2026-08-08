@@ -1,0 +1,10 @@
+# 运行时生成的数据（云端会从 seed.json 自动重建，无需入库）
+data/store.json
+data/users.json
+
+# 本地穿透工具（各环境自行下载，不入库）
+cloudflared
+
+# 依赖与日志
+node_modules/
+*.log
