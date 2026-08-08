@@ -1,0 +1,13 @@
+{
+  "name": "liangzhou-workbench-realtime",
+  "version": "1.0.0",
+  "description": "梁州商务实时共享工作台 - 零依赖Node后端",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "private": true
+}
