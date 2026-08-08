@@ -147,9 +147,15 @@ function serveStatic(req, res, urlPath) {
   if (!filePath.startsWith(PUBLIC_DIR)) { res.writeHead(403); res.end("Forbidden"); return; }
   fs.readFile(filePath, (err, buf) => {
     if (err) { res.writeHead(404); res.end("Not Found"); return; }
+    let out = buf;
+    // 后端伺服时注入标记，前端据此切换为"后端实时模式"；静态托管无此标记则保持本地模式
+    if (path.basename(filePath) === "index.html") {
+      const s = buf.toString("utf-8");
+      out = Buffer.from(s.replace("</head>", '<script>window.__BACKEND__=true;</script></head>'));
+    }
     const ext = path.extname(filePath).toLowerCase();
     res.writeHead(200, { "Content-Type": MIME[ext] || "application/octet-stream" });
-    res.end(buf);
+    res.end(out);
   });
 }
 
@@ -251,6 +257,15 @@ const server = http.createServer(async (req, res) => {
       // 拉取全部数据
       if (p === "/api/data" && req.method === "GET") {
         return sendJSON(res, 200, STORE);
+      }
+      // 整文档覆盖写入（前端每次保存时同步全量）
+      if (p === "/api/data" && req.method === "PUT") {
+        const body = await readBody(req);
+        if (!body || typeof body !== "object") return sendJSON(res, 400, { error: "非法数据" });
+        STORE = body;
+        persistStore();
+        broadcast();
+        return sendJSON(res, 200, { ok: true });
       }
       // 单条/批量更新
       if (p === "/api/update" && req.method === "POST") {
