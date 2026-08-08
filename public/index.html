@@ -187,6 +187,36 @@ tr:hover td { background: #fafbff; }
 .um-add-form input { flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
 .um-add-form select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
 .um-add-form button { padding: 6px 16px; border: none; border-radius: 6px; background: var(--primary); color: white; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.rate-cell { cursor: pointer; padding: 4px 8px; border-radius: 6px; display: inline-block; min-width: 56px; transition: all 0.15s; }
+.rate-cell:hover { background: var(--primary); color: #fff; }
+.login-btn-feishu { background: #3370ff; margin-top: 10px; }
+.login-btn-feishu:hover { background: #245bdb; }
+
+/* ===== 移动端响应式 ===== */
+@media (max-width: 768px) {
+  .sidebar { position: fixed; top: 0; left: 0; right: 0; bottom: auto; width: 100%; flex-direction: row; padding: 8px 10px; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); align-items: center; }
+  .sidebar-logo { padding: 0 12px 0 4px; font-size: 15px; white-space: nowrap; }
+  .nav-item { padding: 8px 12px; border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; }
+  .nav-item.active { border-left: none; border-bottom-color: var(--primary); }
+  .sidebar-footer { margin-top: 0; padding: 0 8px; border-top: none; white-space: nowrap; display: flex; align-items: center; }
+  .main { margin-left: 0; padding: 74px 14px 24px; }
+  .page-header { flex-direction: column; align-items: stretch; gap: 10px; }
+  .page-header h1 { font-size: 20px; }
+  .page-header p { font-size: 12px; }
+  .table-card { padding: 12px; overflow-x: auto; }
+  table { min-width: 640px; }
+  .rate-table { min-width: 480px; }
+  .chart-row { grid-template-columns: 1fr; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .modal { width: 96%; max-height: 92vh; overflow-y: auto; padding: 18px; }
+  .modal h2 { font-size: 18px; }
+  .filter-bar { flex-wrap: wrap; gap: 8px; }
+  .btn { padding: 8px 14px; }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .main { padding: 70px 10px 20px; }
+}
 </style>
 </head>
 <body>
@@ -209,6 +239,7 @@ tr:hover td { background: #fafbff; }
       <input type="password" id="login-password" placeholder="请输入密码" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <button class="login-btn" onclick="doLogin()">登 录</button>
+    <button class="login-btn login-btn-feishu" id="login-feishu-btn" style="display:none;" onclick="feishuLogin()">使用飞书账号登录</button>
     <div class="login-hint">仅限内部人员使用，未经授权禁止访问</div>
   </div>
 </div>
@@ -300,14 +331,14 @@ tr:hover td { background: #fafbff; }
 
 <!-- AGREEMENTS -->
 <div class="tab-content" id="tab-agreements">
-  <div class="page-header"><div><h1>协议进度</h1><p>合作协议签署与打款进度 - 点击状态可编辑</p></div></div>
+  <div class="page-header"><div><h1>协议进度</h1><p>合作协议签署与打款进度 - 点击状态可编辑</p></div><button class="btn btn-primary" onclick="addAgreement()">＋ 新增协议</button></div>
   <div class="kpi-grid" id="agreement-kpi"></div>
   <div class="table-card"><h3>协议明细</h3><table id="agreements-table"></table></div>
 </div>
 
 <!-- CONTACTS -->
 <div class="tab-content" id="tab-contacts">
-  <div class="page-header"><div><h1>建联管理</h1><p>商务拓展联系人及沟通状态 - 点击状态可编辑</p></div></div>
+  <div class="page-header"><div><h1>建联管理</h1><p>商务拓展联系人及沟通状态 - 点击状态可编辑</p></div><button class="btn btn-primary" onclick="addContact()">＋ 新增建联</button></div>
   <div class="filter-bar">
     <span class="filter-label">状态：</span>
     <select id="contact-status-filter" onchange="renderContacts()"><option value="">全部</option><option value="确认合作">确认合作</option><option value="提报合作中">提报合作中</option><option value="开场白">开场白</option><option value="等验证通过">等验证通过</option><option value="无法合作">无法合作</option></select>
@@ -879,7 +910,7 @@ function renderAgreements() {
     <div class="kpi-card blue"><div class="kpi-label">涉及总金额</div><div class="kpi-value">\u00a5${totalAmount.toLocaleString()}</div><div class="kpi-sub">水下合作金额</div></div>
   `;
 
-  let html = `<table><thead><tr><th>合作项目</th><th>协议类型</th><th>涉及打款</th><th>涉及金额</th><th>金额目的</th><th>协议进度</th><th>其他进度</th><th>备注</th></tr></thead><tbody>`;
+  let html = `<table><thead><tr><th>合作项目</th><th>协议类型</th><th>涉及打款</th><th>涉及金额</th><th>金额目的</th><th>协议进度</th><th>其他进度</th><th>备注</th><th>操作</th></tr></thead><tbody>`;
   agreements.forEach((a,i) => {
     html += `<tr>
       <td style="font-weight:500;">${esc(a["合作项目"]||"-")}</td>
@@ -890,6 +921,7 @@ function renderAgreements() {
       <td>${editSelect("协议进度",a["协议进度"],AGREEMENT_PROGRESS,"agreements",i)}</td>
       <td>${esc(a["其他进度"]||"-")}</td>
       <td>${esc(a["备注"]||"-")}</td>
+      <td><button class="btn btn-sm" onclick="showAgreementDetail(${i})">编辑</button> <button class="btn btn-sm btn-danger" onclick="deleteAgreement(${i})">删</button></td>
     </tr>`;
   });
   html += "</tbody></table>";
@@ -908,7 +940,7 @@ function renderContacts() {
     if (search) { const t = ((c["项目"]||"")+(c["联系方式 微信/电话"]||"")).toLowerCase(); if (!t.includes(search)) return false; }
     return true;
   });
-  let html = `<table><thead><tr><th>日期</th><th>联系方式</th><th>来源</th><th>沟通状态</th><th>项目</th><th>备注</th></tr></thead><tbody>`;
+  let html = `<table><thead><tr><th>日期</th><th>联系方式</th><th>来源</th><th>沟通状态</th><th>项目</th><th>备注</th><th>操作</th></tr></thead><tbody>`;
   filtered.forEach((c,i) => {
     const idx = contacts.indexOf(c);
     const statusCls = c["沟通状态"]==="确认合作"?"badge-success":c["沟通状态"]==="无法合作"?"badge-danger":c["沟通状态"]==="提报合作中"?"badge-info":"badge-warning";
@@ -919,6 +951,7 @@ function renderContacts() {
       <td>${editSelect("沟通状态",c["沟通状态"],CONTACT_STATUS,"contacts",idx)}</td>
       <td style="max-width:200px;">${esc(c["项目"]||"-")}</td>
       <td style="font-size:12px;">${esc(String(c["备注"]||"-"))}</td>
+      <td><button class="btn btn-sm" onclick="showContactDetail(${idx})">编辑</button> <button class="btn btn-sm btn-danger" onclick="deleteContact(${idx})">删</button></td>
     </tr>`;
   });
   if (filtered.length === 0) html += '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-secondary);">暂无数据</td></tr>';
@@ -926,36 +959,253 @@ function renderContacts() {
   document.getElementById("contacts-table").innerHTML = html;
 }
 
+// === Agreements 增删改 ===
+const AGREEMENT_TYPE_OPTS = ["", "水下协议", "常规商务协议", "其他"];
+function addAgreement() {
+  const typeOpts = AGREEMENT_TYPE_OPTS.map(t=>`<option>${t}</option>`).join("");
+  const progOpts = AGREEMENT_PROGRESS.map(p=>`<option>${p}</option>`).join("");
+  const grid = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;margin-top:8px;">
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">合作项目 *</label><input id="na-project" style="width:100%;" placeholder="如：xx品牌水下协议"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">协议类型</label><select id="na-type" style="width:100%;">${typeOpts}</select></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">是否涉及打款</label><select id="na-pay" style="width:100%;"><option value="否">否</option><option value="是">是</option></select></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">涉及金额(元)</label><input id="na-amount" type="number" style="width:100%;" placeholder="0"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">金额目的</label><input id="na-purpose" style="width:100%;" placeholder="如：内容制作费"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">协议进度</label><select id="na-prog" style="width:100%;">${progOpts}</select></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">其他进度</label><input id="na-other" style="width:100%;"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">备注</label><input id="na-note" style="width:100%;"></div>
+    </div>`;
+  showModal(`<h2>新增协议</h2>${grid}
+    <div style="margin-top:20px;text-align:right;">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="submitNewAgreement()">保存协议</button>
+    </div>`);
+}
+function submitNewAgreement() {
+  const project = document.getElementById("na-project").value.trim();
+  if (!project) { alert("请填写合作项目"); return; }
+  const amount = parseFloat(document.getElementById("na-amount").value) || 0;
+  const row = {
+    "合作项目": project,
+    "协议类型": document.getElementById("na-type").value,
+    "是否涉及打款": document.getElementById("na-pay").value,
+    "涉及金额": amount,
+    "金额目的": document.getElementById("na-purpose").value.trim(),
+    "协议进度": document.getElementById("na-prog").value || "",
+    "其他进度": document.getElementById("na-other").value.trim(),
+    "备注": document.getElementById("na-note").value.trim()
+  };
+  API.req("/api/add", { method: "POST", body: { sheet: "合作协议进度", row } })
+    .then(() => { closeModal(); showSaved(); })
+    .catch(err => showError(err.message));
+}
+function deleteAgreement(idx) {
+  if (!confirm("确定删除该协议吗？此操作会同步给所有在线成员。")) return;
+  API.req("/api/delete", { method: "POST", body: { sheet: "合作协议进度", index: idx } })
+    .then(() => { closeModal(); showSaved(); })
+    .catch(err => showError(err.message));
+}
+function showAgreementDetail(i) {
+  const a = APP_DATA["合作协议进度"].data[i];
+  if (!a) return;
+  const progOpts = AGREEMENT_PROGRESS.map(p=>`<option ${a["协议进度"]===p?"selected":""}>${p}</option>`).join("");
+  const html = `
+    <h2>协议详情（编辑后点保存）</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;margin-top:8px;">
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">合作项目</label><input id="ad-project" style="width:100%;" value="${esc(a["合作项目"]||"")}"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">协议类型</label><input id="ad-type" style="width:100%;" value="${esc(a["协议类型"]||"")}"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">是否涉及打款</label><select id="ad-pay" style="width:100%;"><option value="否" ${a["是否涉及打款"]==="否"?"selected":""}>否</option><option value="是" ${a["是否涉及打款"]==="是"?"selected":""}>是</option></select></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">涉及金额(元)</label><input id="ad-amount" type="number" style="width:100%;" value="${typeof a["涉及金额"]==="number"?a["涉及金额"]:0}"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">金额目的</label><input id="ad-purpose" style="width:100%;" value="${esc(a["金额目的"]||"")}"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">协议进度</label><select id="ad-prog" style="width:100%;">${progOpts}</select></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">其他进度</label><input id="ad-other" style="width:100%;" value="${esc(a["其他进度"]||"")}"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">备注</label><input id="ad-note" style="width:100%;" value="${esc(a["备注"]||"")}"></div>
+    </div>
+    <div style="margin-top:20px;text-align:right;">
+      <button class="btn btn-danger" onclick="deleteAgreement(${i})">删除协议</button>
+      <button class="btn btn-primary" onclick="saveAgreementDetail(${i})">保存</button>
+    </div>`;
+  showModal(html);
+}
+function saveAgreementDetail(i) {
+  const changes = {
+    "合作项目": document.getElementById("ad-project").value.trim(),
+    "协议类型": document.getElementById("ad-type").value.trim(),
+    "是否涉及打款": document.getElementById("ad-pay").value,
+    "涉及金额": parseFloat(document.getElementById("ad-amount").value) || 0,
+    "金额目的": document.getElementById("ad-purpose").value.trim(),
+    "协议进度": document.getElementById("ad-prog").value,
+    "其他进度": document.getElementById("ad-other").value.trim(),
+    "备注": document.getElementById("ad-note").value.trim()
+  };
+  API.req("/api/update", { method: "POST", body: { sheet: "合作协议进度", index: i, changes } })
+    .then(() => { closeModal(); showSaved(); })
+    .catch(err => showError(err.message));
+}
+
+// === Contacts 增删改 ===
+function addContact() {
+  const statusOpts = CONTACT_STATUS.map(s=>`<option>${s}</option>`).join("");
+  const srcOpts = ["", "小红书", "B站", "抖音", "微博", "视频号"].map(s=>`<option>${s}</option>`).join("");
+  const grid = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;margin-top:8px;">
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">日期</label><input id="nc-date" style="width:100%;" placeholder="如：8.20"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">联系方式</label><input id="nc-contact" style="width:100%;" placeholder="微信/电话"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">来源</label><select id="nc-source" style="width:100%;">${srcOpts}</select></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">沟通状态</label><select id="nc-status" style="width:100%;">${statusOpts}</select></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">项目</label><input id="nc-project" style="width:100%;"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">备注</label><input id="nc-note" style="width:100%;"></div>
+    </div>`;
+  showModal(`<h2>新增建联</h2>${grid}
+    <div style="margin-top:20px;text-align:right;">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="submitNewContact()">保存建联</button>
+    </div>`);
+}
+function submitNewContact() {
+  const contact = document.getElementById("nc-contact").value.trim();
+  if (!contact) { alert("请填写联系方式"); return; }
+  const row = {
+    "日期": document.getElementById("nc-date").value.trim(),
+    "联系方式 微信/电话": contact,
+    "来源": document.getElementById("nc-source").value,
+    "沟通状态": document.getElementById("nc-status").value || "开场白",
+    "项目": document.getElementById("nc-project").value.trim(),
+    "备注": document.getElementById("nc-note").value.trim()
+  };
+  API.req("/api/add", { method: "POST", body: { sheet: "建联表", row } })
+    .then(() => { closeModal(); showSaved(); })
+    .catch(err => showError(err.message));
+}
+function deleteContact(idx) {
+  if (!confirm("确定删除该建联吗？此操作会同步给所有在线成员。")) return;
+  API.req("/api/delete", { method: "POST", body: { sheet: "建联表", index: idx } })
+    .then(() => { closeModal(); showSaved(); })
+    .catch(err => showError(err.message));
+}
+function showContactDetail(i) {
+  const c = APP_DATA["建联表"].data[i];
+  if (!c) return;
+  const statusOpts = CONTACT_STATUS.map(s=>`<option ${c["沟通状态"]===s?"selected":""}>${s}</option>`).join("");
+  const srcOpts = ["", "小红书", "B站", "抖音", "微博", "视频号"].map(s=>`<option ${c["来源"]===s?"selected":""}>${s}</option>`).join("");
+  const html = `
+    <h2>建联详情（编辑后点保存）</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;margin-top:8px;">
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">日期</label><input id="cd-date" style="width:100%;" value="${esc(c["日期"]||"")}"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">联系方式</label><input id="cd-contact" style="width:100%;" value="${esc(String(c["联系方式 微信/电话"]||""))}"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">来源</label><select id="cd-source" style="width:100%;">${srcOpts}</select></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">沟通状态</label><select id="cd-status" style="width:100%;">${statusOpts}</select></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">项目</label><input id="cd-project" style="width:100%;" value="${esc(c["项目"]||"")}"></div>
+      <div><label style="display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">备注</label><input id="cd-note" style="width:100%;" value="${esc(String(c["备注"]||""))}"></div>
+    </div>
+    <div style="margin-top:20px;text-align:right;">
+      <button class="btn btn-danger" onclick="deleteContact(${i})">删除建联</button>
+      <button class="btn btn-primary" onclick="saveContactDetail(${i})">保存</button>
+    </div>`;
+  showModal(html);
+}
+function saveContactDetail(i) {
+  const changes = {
+    "日期": document.getElementById("cd-date").value.trim(),
+    "联系方式 微信/电话": document.getElementById("cd-contact").value.trim(),
+    "来源": document.getElementById("cd-source").value,
+    "沟通状态": document.getElementById("cd-status").value,
+    "项目": document.getElementById("cd-project").value.trim(),
+    "备注": document.getElementById("cd-note").value.trim()
+  };
+  API.req("/api/update", { method: "POST", body: { sheet: "建联表", index: i, changes } })
+    .then(() => { closeModal(); showSaved(); })
+    .catch(err => showError(err.message));
+}
+
 // === Rate Card ===
+function getRateSingleRows() {
+  const rd = APP_DATA["月度刊例价"].data;
+  return rd.map((r,i)=>({r,i})).filter(o=> (o.r.kind==="single" || (o.r.kind===undefined && o.i<4)) && o.r.kind!=="deleted");
+}
+function getRatePlatforms() {
+  const s = getRateSingleRows();
+  if (!s.length) return ["小红书","抖音","视频号","B站","微博","小宇宙","豆瓣"];
+  return Object.keys(s[0].r).filter(k=> k!=="kind" && k!=="月份");
+}
+const RATE_MONTH_LABELS = ["6月","7月(初)","7月(调)","8月"];
 function renderRateCard() {
   const rd = APP_DATA["月度刊例价"].data;
-  const platforms = ["小红书","抖音","视频号","B站","微博","小宇宙","豆瓣"];
-  let html = `<table><thead><tr><th style="text-align:left;">月份</th>` + platforms.map(p=>`<th>${esc(p)}</th>`).join("") + `</tr></thead><tbody>`;
-  const monthRows = [{m:"6月",r:rd[0]},{m:"7月(初)",r:rd[1]},{m:"7月(调)",r:rd[2]},{m:"8月",r:rd[3]}];
-  monthRows.forEach(mr => {
-    html += `<tr><td style="font-weight:600;text-align:left;">${mr.m}</td>`;
-    platforms.forEach(p => {
-      const v = mr.r[p]; let d = "-";
-      if (typeof v === "number") d = "\u00a5" + v.toLocaleString();
-      else if (v && v !== "-") d = esc(v);
-      html += `<td style="text-align:center;font-weight:600;color:${typeof v==="number"?"var(--primary)":"var(--text-secondary)"};">${d}</td>`;
+  const singles = getRateSingleRows();
+  const platforms = getRatePlatforms();
+  let html = `<div style="margin-bottom:10px;">
+    <button class="btn btn-sm btn-primary" onclick="addMonth()">＋ 新增月份</button>
+    <button class="btn btn-sm btn-primary" onclick="addPlatform()">＋ 新增平台</button>
+    <span style="font-size:12px;color:var(--text-secondary);margin-left:8px;">点击数字格可修改价格 / 折扣率</span>
+  </div>`;
+  html += `<table><thead><tr><th style="text-align:left;">月份</th>` + platforms.map(p=>`<th>${esc(p)}</th>`).join("") + `<th>操作</th></tr></thead><tbody>`;
+  singles.forEach((o,si) => {
+    const r = o.r, i = o.i;
+    const mlabel = r["月份"] || RATE_MONTH_LABELS[si] || ("月份"+(si+1));
+    html += `<tr><td style="font-weight:600;text-align:left;">${esc(mlabel)}</td>`;
+    platforms.forEach(p=>{
+      let v=r[p];
+      let d = (typeof v==="number")? "\u00a5"+v.toLocaleString() : (v===null||v==="-"||v===undefined)? "-" : esc(String(v));
+      html += `<td style="text-align:center;"><span class="rate-cell" onclick="editRateCell(${i},'${p}')" title="点击修改价格">${d}</span></td>`;
     });
-    html += "</tr>";
+    html += `<td><button class="btn btn-sm btn-danger" onclick="deleteRateRow(${i})">删</button></td></tr>`;
   });
-  html += "</tbody></table>";
+  if (!singles.length) html += `<tr><td colspan="${platforms.length+2}" style="text-align:center;padding:16px;color:var(--text-secondary);">暂无数据，点上方"新增月份"</td></tr>`;
+  html += `</tbody></table>`;
   document.getElementById("rate-table").innerHTML = html;
 
+  // 组合折扣（折扣率可编辑）
   const combos = [{l:"抖音+小红书",k:"小红书"},{l:"抖音+小红书+视频号",k:"视频号"},{l:"抖音+小红书+B站",k:"微博"},{l:"抖音+小红书+小宇宙",k:"豆瓣"}];
   let ch = `<table><thead><tr><th style="text-align:left;">组合方案</th><th>6月折扣</th><th>7月折扣</th><th>8月折扣</th></tr></thead><tbody>`;
-  combos.forEach((c,i) => {
-    const r6 = rd[5][c.k], r7 = rd[6][c.k]||rd[7][c.k], r8 = rd[8][c.k];
-    ch += `<tr><td style="font-weight:600;text-align:left;">${esc(c.l)}</td>`;
-    ch += `<td style="text-align:center;">${typeof r6==="number"?(r6*100).toFixed(0)+"%":esc(r6||"-")}</td>`;
-    ch += `<td style="text-align:center;">${typeof r7==="number"?(r7*100).toFixed(0)+"%":esc(r7||"-")}</td>`;
-    ch += `<td style="text-align:center;">${typeof r8==="number"?(r8*100).toFixed(0)+"%":esc(r8||"-")}</td></tr>`;
+  combos.forEach(c => {
+    const r6 = rd[5] ? rd[5][c.k] : null;
+    const r7 = (rd[6] && rd[6][c.k]!=null) ? rd[6][c.k] : (rd[7] ? rd[7][c.k] : null);
+    const r8 = rd[8] ? rd[8][c.k] : null;
+    const cell = (val, rowIdx) => {
+      let d = (typeof val==="number")? (val*100).toFixed(0)+"%" : (val==null||val==="-"||val===undefined)? "-" : esc(String(val));
+      return `<td style="text-align:center;"><span class="rate-cell" onclick="editRateCell(${rowIdx},'${c.k}')" title="点击修改折扣">${d}</span></td>`;
+    };
+    ch += `<tr><td style="font-weight:600;text-align:left;">${esc(c.l)}</td>` + cell(r6,5) + cell(r7,6) + cell(r8,8) + `</tr>`;
   });
-  ch += "</tbody></table>";
+  ch += `</tbody></table>`;
   document.getElementById("combo-table").innerHTML = ch;
+}
+function editRateCell(rowIndex, field) {
+  const cur = APP_DATA["月度刊例价"].data[rowIndex][field];
+  const val = prompt("修改数值：价格填金额数字（如 30000），折扣填 0~1 的小数（如 0.9）。留空则清空：", cur==null?"":(typeof cur==="number"?cur:""));
+  if (val === null) return;
+  let v;
+  if (val.trim()==="") v = null;
+  else { v = parseFloat(val); if (isNaN(v)) { alert("请输入数字"); return; } }
+  API.req("/api/update", { method:"POST", body:{ sheet:"月度刊例价", index:rowIndex, field, value:v } })
+    .then(()=>showSaved()).catch(err=>showError(err.message));
+}
+function addMonth() {
+  const name = prompt("请输入月份名称（如：9月）：");
+  if (!name || !name.trim()) return;
+  const platforms = getRatePlatforms();
+  const row = { kind:"single", "月份": name.trim() };
+  platforms.forEach(p=> row[p]=0);
+  API.req("/api/add", { method:"POST", body:{ sheet:"月度刊例价", row } })
+    .then(()=>showSaved()).catch(err=>showError(err.message));
+}
+function addPlatform() {
+  const name = prompt("请输入新平台名称（如：知乎）：");
+  if (!name || !name.trim()) return;
+  const pname = name.trim();
+  const rd = APP_DATA["月度刊例价"].data;
+  const promises = [];
+  rd.forEach((r,i)=>{
+    if (r.kind==="deleted") return;
+    const isSingle = r.kind==="single" || (r.kind===undefined && i<4);
+    promises.push(API.req("/api/update", { method:"POST", body:{ sheet:"月度刊例价", index:i, field:pname, value: isSingle?0:null } }));
+  });
+  Promise.all(promises).then(()=>showSaved()).catch(err=>showError(err.message));
+}
+function deleteRateRow(i) {
+  if (!confirm("确定删除该月份行吗？（仅标记隐藏，管理员可恢复）")) return;
+  API.req("/api/update", { method:"POST", body:{ sheet:"月度刊例价", index:i, field:"kind", value:"deleted" } })
+    .then(()=>showSaved()).catch(err=>showError(err.message));
 }
 
 // === Modal ===
@@ -1209,6 +1459,10 @@ async function doLogin() {
   }
 }
 
+function feishuLogin() {
+  window.location.href = "/api/feishu/login";
+}
+
 async function doLogout() {
   if (!confirm("确定要退出登录吗？")) return;
   try { await API.req("/api/logout", { method: "POST" }); } catch (e) {}
@@ -1265,6 +1519,13 @@ async function changePassword(username) {
 
 // === 初始化 ===
 (async function initApp() {
+  try {
+    const cfg = await API.req("/api/config");
+    if (cfg && cfg.feishuEnabled) {
+      const fb = document.getElementById("login-feishu-btn");
+      if (fb) fb.style.display = "block";
+    }
+  } catch (e) {}
   const ok = await checkAuth();
   if (ok) {
     try {
